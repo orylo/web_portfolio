@@ -11,3 +11,71 @@
 body {
   font-family: var(--font-pretendard);
 }
+
+/* Back button wrapper animation */
+@media (min-width: 768px) {
+  .back-button-wrapper {
+    transform: translateY(0);
+    opacity: 1;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .back-button-wrapper.hiding {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* Tags section animation */
+.tags-section {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When coming from project detail page or initial entry - Only for tablet and desktop */
+@media (min-width: 768px) {
+  .from-project-detail .tags-section,
+  .initial-entry .tags-section {
+    animation: expandTags 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+/* Project thumbnails animation */
+.project-thumbnail {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.project-thumbnail:nth-child(1) { animation-delay: 0.3s; }
+.project-thumbnail:nth-child(2) { animation-delay: 0.35s; }
+.project-thumbnail:nth-child(3) { animation-delay: 0.4s; }
+.project-thumbnail:nth-child(4) { animation-delay: 0.45s; }
+.project-thumbnail:nth-child(5) { animation-delay: 0.5s; }
+.project-thumbnail:nth-child(6) { animation-delay: 0.55s; }
+.project-thumbnail:nth-child(7) { animation-delay: 0.6s; }
+.project-thumbnail:nth-child(8) { animation-delay: 0.65s; }
+
+@keyframes expandTags {
+  0% {
+    height: 0;
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    height: var(--tags-height);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

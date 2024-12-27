@@ -1,17 +1,32 @@
 import Navigation from '../components/Navigation';
 import { useState, useEffect, useRef } from 'react';
 import { tags } from '../data/tags';
-import { projects } from '../data/projects';
+import { projectDetails } from '../data/projectDetails';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 export default function Works() {
   const [selectedTag, setSelectedTag] = useState('All');
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [tagsHeight, setTagsHeight] = useState(0);
   const [isDesktop, setIsDesktop] = useState(true);
+  const [filteredProjects, setFilteredProjects] = useState(Object.values(projectDetails));
+  const [isAnimating, setIsAnimating] = useState(false);
   const tagsRef = useRef<HTMLDivElement>(null);
   const tagsContentRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const savedTag = localStorage.getItem('selectedTag');
+    if (savedTag) {
+      setSelectedTag(savedTag);
+      const newProjects = savedTag === 'All' 
+        ? Object.values(projectDetails) 
+        : Object.values(projectDetails).filter(project => project.category.includes(savedTag));
+      setFilteredProjects(newProjects);
+    }
+  }, []);
 
   useEffect(() => {
     const checkWidth = () => {
@@ -27,36 +42,105 @@ export default function Works() {
       if (tagsContentRef.current) {
         const height = tagsContentRef.current.offsetHeight;
         setTagsHeight(height);
+        if (tagsRef.current) {
+          (tagsRef.current as HTMLElement).style.setProperty('--tags-height', `${height}px`);
+        }
       }
     };
 
     updateTagsHeight();
+    window.addEventListener('resize', updateTagsHeight);
     const resizeObserver = new ResizeObserver(updateTagsHeight);
     if (tagsContentRef.current) {
       resizeObserver.observe(tagsContentRef.current);
     }
 
     return () => {
+      window.removeEventListener('resize', updateTagsHeight);
       resizeObserver.disconnect();
     };
   }, []);
 
-  const filteredProjects = selectedTag === 'All'
-    ? projects
-    : projects.filter(project => project.tags.includes(selectedTag));
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (url === '/works') {
+        if (router.asPath.includes('/works/')) {
+          // 프로젝트 상세 페이지에서 돌아올 때
+          setIsTagsOpen(false);
+          if (window.innerWidth >= 768) {  // 태블릿/데스크톱 사이즈에서만 애니메이션 적용
+            document.body.classList.add('from-project-detail');
+            if (tagsRef.current && tagsContentRef.current) {
+              const height = tagsContentRef.current.offsetHeight;
+              (tagsRef.current as HTMLElement).style.setProperty('--tags-height', `${height}px`);
+            }
+            setTimeout(() => {
+              document.body.classList.remove('from-project-detail');
+            }, 500);
+          }
+        } else {
+          // 다른 페이지에서 Works로 처음 진입할 때
+          if (window.innerWidth >= 768) {  // 태블릿/데스크톱 사이즈에서만 애니메이션 적용
+            document.body.classList.add('initial-entry');
+            if (tagsRef.current && tagsContentRef.current) {
+              const height = tagsContentRef.current.offsetHeight;
+              (tagsRef.current as HTMLElement).style.setProperty('--tags-height', `${height}px`);
+            }
+            setTimeout(() => {
+              document.body.classList.remove('initial-entry');
+            }, 500);
+          }
+        }
+      }
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router]);
+
+  const handleTagChange = async (tag: string) => {
+    setIsAnimating(true);
+    setSelectedTag(tag);
+    setIsTagsOpen(false);
+
+    // 선택된 태그를 로컬 스토리지에 저장
+    localStorage.setItem('selectedTag', tag);
+
+    // 현재 프로젝트들을 페이드 아웃
+    const newProjects = tag === 'All' 
+      ? Object.values(projectDetails) 
+      : Object.values(projectDetails).filter(project => project.category.includes(tag));
+    
+    // 약간의 딜레이 후 새 프로젝트들로 업데이트
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setFilteredProjects(newProjects);
+    
+    // 페이드 인 애니메이션을 위한 상태 리셋
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 100);
+  };
 
   const toggleTags = () => {
     setIsTagsOpen(!isTagsOpen);
+    if (tagsContentRef.current) {
+      const height = tagsContentRef.current.offsetHeight;
+      setTagsHeight(height);
+      if (tagsRef.current) {
+        (tagsRef.current as HTMLElement).style.setProperty('--tags-height', `${height}px`);
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
       {/* Fixed Tags Section */}
-      <div className="fixed top-[96px] left-0 right-0 bg-white z-40">
+      <div className="fixed top-[96px] left-0 right-0 bg-white z-30">
         {/* Mobile Tags Toggle */}
         <button
-          className="w-full py-4 text-left px-16 md:hidden border-b border-black"
+          className="w-full py-6 text-left px-16 md:hidden border-b border-black"
           onClick={toggleTags}
         >
           <div className="flex justify-between items-center">
@@ -69,27 +153,26 @@ export default function Works() {
         <div 
           ref={tagsRef}
           className={`
+            tags-section
             overflow-hidden transition-[height] duration-500 ease-in-out
             md:border-b md:border-black
             relative
           `}
           style={{ 
-            height: isDesktop ? 'auto' : isTagsOpen ? `${tagsHeight}px` : '0'
+            height: isDesktop ? 'auto' : isTagsOpen ? `${tagsHeight}px` : '0',
+            pointerEvents: isDesktop || isTagsOpen ? 'auto' : 'none'
           }}
         >
           <div 
             ref={tagsContentRef}
             className="max-w-[1728px] mx-auto px-16"
           >
-            <div className="py-8">
+            <div className="py-6">
               <div className="flex flex-wrap gap-4 text-base">
                 {tags.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => {
-                      setSelectedTag(tag);
-                      setIsTagsOpen(false);
-                    }}
+                    onClick={() => handleTagChange(tag)}
                     className={`${
                       selectedTag === tag
                         ? 'text-black'
@@ -114,13 +197,13 @@ export default function Works() {
 
       <main>
         <div 
-          className="relative z-30 transition-[padding] duration-500 ease-in-out"
+          className="relative z-20 transition-[padding] duration-500 ease-in-out"
           style={{ 
             paddingTop: isDesktop
-              ? `${tagsHeight + 96}px` 
+              ? `${tagsHeight + 98}px` 
               : isTagsOpen 
-                ? `${tagsHeight + 160}px`
-                : '160px'
+                ? `${tagsHeight + 171}px`
+                : '171px'
           }}
         >
           <div className="max-w-[1728px] mx-auto px-16">
@@ -130,7 +213,7 @@ export default function Works() {
                 <Link 
                   href={`/works/${project.id}`} 
                   key={project.id}
-                  className="group cursor-pointer"
+                  className={`project-thumbnail group cursor-pointer`}
                 >
                   {/* Square Thumbnail Container */}
                   <div className="relative aspect-square overflow-hidden">
@@ -146,7 +229,7 @@ export default function Works() {
                         <h3 className="text-lg mb-2">{project.title}</h3>
                         <p className="text-xs mb-4">{project.date}</p>
                         <div className="flex gap-2">
-                          {project.tags.slice(0, 2).map((tag, tagIndex) => (
+                          {project.category.slice(0, 2).map((tag, tagIndex) => (
                             <span key={tagIndex} className="text-xs">
                               {tag}
                             </span>
@@ -162,7 +245,7 @@ export default function Works() {
                       <p className="text-xs text-black">{project.date}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {project.tags.slice(0, 2).map((tag, tagIndex) => (
+                      {project.category.slice(0, 2).map((tag, tagIndex) => (
                         <span
                           key={tagIndex}
                           className="text-xs text-black"
