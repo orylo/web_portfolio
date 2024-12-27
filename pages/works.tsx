@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { tags } from '../data/tags';
 import { projects, Project } from '../data/projects';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Works() {
   const [selectedTag, setSelectedTag] = useState('All');
@@ -45,8 +46,13 @@ export default function Works() {
               >
                 {/* Square Thumbnail Container */}
                 <div className="relative aspect-square overflow-hidden mb-4">
-                  <div className="w-full h-full bg-gray-100 transition-all duration-300 group-hover:bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Image {index + 1}</span>
+                  <div className="w-full h-full bg-gray-100 transition-all duration-300 group-hover:bg-gray-200">
+                    <Image
+                      src={project.thumbnail}
+                      alt={project.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
                   </div>
                 </div>
                 {/* Project Info */}

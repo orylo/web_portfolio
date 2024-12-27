@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import Navigation from '../../components/Navigation';
 import { projects } from '../../data/projects';
+import Image from 'next/image';
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -39,8 +40,13 @@ export default function ProjectDetail() {
               <p className="text-sm text-gray-500">{project.date}</p>
             </div>
             <p className="text-lg text-gray-600 mb-8">{project.description}</p>
-            <div className="aspect-video bg-gray-100 mb-8 flex items-center justify-center">
-              <span className="text-gray-400">Project Image</span>
+            <div className="relative aspect-video bg-gray-100 mb-8">
+              <Image
+                src={project.thumbnail}
+                alt={project.title}
+                fill
+                className="object-cover"
+              />
             </div>
             <div className="prose max-w-none">
               {/* 추후 상세 내용이 추가될 영역 */}
