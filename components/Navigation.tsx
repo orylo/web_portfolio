@@ -12,6 +12,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const router = useRouter();
   const path = currentPath || router.pathname;
+  const basePath = process.env.NODE_ENV === 'production' ? '/web_portfolio' : '';
 
   useEffect(() => {
     const checkWidth = () => {
@@ -43,7 +44,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
               {/* Logo */}
               <Link href="/" className="relative h-12 w-48 pt-[2px] transition-all duration-300 ease-in-out">
                 <Image
-                  src="./logo.png"
+                  src={`${basePath}/logo.png`}
                   alt="Logo"
                   fill
                   className="object-contain"
