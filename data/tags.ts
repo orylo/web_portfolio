@@ -1,15 +1,15 @@
 export const tags = [
-  'All',
-  'Brand Design',
-  'Editorial',
-  'Visual Identity',
-  'Typography',
-  'Packaging',
-  'Motion Graphics',
-  'Social Media',
-  'Campaign',
-  'Art Direction',
-  'Print',
-  'Digital Design',
-  'Exhibition'
+  'ALL',
+  'BRANDING',
+  'EDITORIAL',
+  'VISUAL IDENTITY',
+  'TYPOGRAPHY',
+  'PACKAGE DESIGN',
+  'MOTION GRAPHICS',
+  'SOCIAL MEDIA',
+  'CAMPAIGN',
+  'ART DIRECTION',
+  'PRINT',
+  'DIGITAL DESIGN',
+  'EXHIBITION'
 ]; 

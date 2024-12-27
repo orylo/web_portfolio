@@ -129,23 +129,7 @@ export default function ProjectDetail() {
                 <div className="py-6">
                   <button
                     onClick={() => {
-                      const wrapper = document.querySelector('.back-button-wrapper');
-                      if (wrapper) {
-                        wrapper.classList.add('hiding');
-                        setTimeout(() => {
-                          const savedTag = localStorage.getItem('selectedTag');
-                          if (savedTag) {
-                            router.push('/works').then(() => {
-                              document.body.classList.add('from-project-detail');
-                              setTimeout(() => {
-                                document.body.classList.remove('from-project-detail');
-                              }, 300);
-                            });
-                          } else {
-                            router.back();
-                          }
-                        }, 200);
-                      }
+                      router.push('/works');
                     }}
                     className="text-base hover:opacity-50 transition-opacity"
                   >
@@ -158,59 +142,61 @@ export default function ProjectDetail() {
         </div>
 
         {/* Main Image */}
-        <div className="mt-[144px]">
-          <div className="aspect-[16/9] bg-gray-100 w-full relative">
-            <Image
-              src={project.mainImage}
-              alt={project.title}
-              fill
-              style={{ objectFit: 'cover' }}
-              loading="lazy"
-            />
-          </div>
+        <div className="w-full aspect-[16/9] relative bg-gray-100">
+          <Image
+            src={project.mainImage}
+            alt={project.title}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
 
         <div className="max-w-[1728px] mx-auto px-4 md:px-16">
           {/* Project Title & Info */}
           <div className="py-20 border-b border-black">
-            <h3 className="text-lg mb-4">{project.title}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
               <div>
+                <h3 className="text-lg mb-4">{project.title}</h3>
                 <p className="text-4xl font-light leading-relaxed whitespace-pre-line">
                   {project.slogan}
                 </p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm mb-2">Clients</h4>
-                  <p className="text-gray-600">{project.client}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">PROJECT DURATION</h3>
+                  <p className="text-lg text-gray-600 leading-tight">{project.projectDuration}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm mb-2">Location</h4>
-                  <p className="text-gray-600">{project.location}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">PROJECT PURPOSE</h3>
+                  <p className="text-lg text-gray-600 leading-tight">{project.projectPurpose}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm mb-2">Industry</h4>
-                  <p className="text-gray-600">{project.industry}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">MY ROLE - {project.myRole}</h3>
+                  <p className="text-lg text-gray-600 leading-tight">{project.roleDescription}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm mb-2">Category</h4>
-                  <p className="text-gray-600">{project.category.join(', ')}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">CATEGORY</h3>
+                  <p className="text-lg text-gray-600 leading-tight">
+                    {project.category.join(', ')}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="text-sm mb-2">Year</h4>
-                  <p className="text-gray-600">{project.date}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">TOOLS USED</h3>
+                  <p className="text-lg text-gray-600 leading-tight">
+                    {project.toolsUsed.join(', ')}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="text-sm mb-2">Role</h4>
-                  <p className="text-gray-600">{project.role}</p>
+                  <h3 className="text-base mb-2 border border-black rounded-full px-4 py-1 inline-block">PROJECT HIGHLIGHTS</h3>
+                  <p className="text-lg text-gray-600 leading-tight">{project.projectHighlights}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Introduction Section */}
-          <div className="py-20 border-b border-black">
+          <div className="pt-[50px] mb-40">
             <h2 className="text-2xl mb-8">Introduction</h2>
             <p className="text-lg text-gray-600 leading-relaxed max-w-3xl">
               {project.introduction}
@@ -218,32 +204,31 @@ export default function ProjectDetail() {
           </div>
 
           {/* Result Section */}
-          <div className="py-20 border-b border-black">
+          <div className="border-t border-black pt-[50px] mb-40">
             <h2 className="text-2xl mb-8">{resultSection.title}</h2>
-            {project.result.components.map((component, index) => (
-              <ResultComponent key={index} component={component} />
-            ))}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center py-20">
-            <Link href="/works" className="text-gray-600 hover:text-black transition-colors">
-              ← Back to Works
-            </Link>
-            <div className="flex gap-8">
-              <button className="text-gray-600 hover:text-black transition-colors">
-                Prev Project
-              </button>
-              <button className="text-gray-600 hover:text-black transition-colors">
-                Next Project
-              </button>
-            </div>
+            {project.result.components.map((component, index) => {
+              switch (component.type) {
+                case 'title':
+                  return <ResultTitle key={index} content={component.content} />;
+                case 'description':
+                  return <ResultDescription key={index} content={component.content} />;
+                case 'fullImage':
+                  return <ResultFullImage key={index} src={component.src} />;
+                case 'twoImages':
+                  return <ResultTwoImages key={index} images={component.images} />;
+                case 'threeImages':
+                  return <ResultThreeImages key={index} images={component.images} />;
+                case 'fourImages':
+                  return <ResultFourImages key={index} images={component.images} />;
+                default:
+                  return null;
+              }
+            })}
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200">
+      <footer className="border-t border-black">
         <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>

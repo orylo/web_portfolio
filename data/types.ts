@@ -49,12 +49,13 @@ export interface ProjectDetail {
   title: string;
   thumbnail: string;
   slogan: string;
-  client: string;
-  location: string;
-  industry: string;
+  projectDuration: string;
+  projectPurpose: string;
+  myRole: string;
+  roleDescription: string;
   category: string[];
-  date: string;
-  role: string;
+  toolsUsed: string[];
+  projectHighlights: string;
   introduction: string;
   mainImage: string;
 } 

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 export default function Works() {
-  const [selectedTag, setSelectedTag] = useState('All');
+  const [selectedTag, setSelectedTag] = useState('ALL');
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [tagsHeight, setTagsHeight] = useState(0);
   const [isDesktop, setIsDesktop] = useState(true);
@@ -21,10 +21,14 @@ export default function Works() {
     const savedTag = localStorage.getItem('selectedTag');
     if (savedTag) {
       setSelectedTag(savedTag);
-      const newProjects = savedTag === 'All' 
+      const newProjects = savedTag === 'ALL' 
         ? Object.values(projectDetails) 
         : Object.values(projectDetails).filter(project => project.category.includes(savedTag));
       setFilteredProjects(newProjects);
+    } else {
+      // 저장된 태그가 없는 경우 'ALL'로 설정하고 모든 프로젝트 표시
+      localStorage.setItem('selectedTag', 'ALL');
+      setFilteredProjects(Object.values(projectDetails));
     }
   }, []);
 
@@ -108,7 +112,7 @@ export default function Works() {
     localStorage.setItem('selectedTag', tag);
 
     // 현재 프로젝트들을 페이드 아웃
-    const newProjects = tag === 'All' 
+    const newProjects = tag === 'ALL' 
       ? Object.values(projectDetails) 
       : Object.values(projectDetails).filter(project => project.category.includes(tag));
     
@@ -168,7 +172,7 @@ export default function Works() {
             className="max-w-[1728px] mx-auto px-16"
           >
             <div className="py-6">
-              <div className="flex flex-wrap gap-4 text-base">
+              <div className="flex flex-wrap gap-4 text-base uppercase">
                 {tags.map((tag) => (
                   <button
                     key={tag}
@@ -227,11 +231,11 @@ export default function Works() {
                       {/* Hover Overlay - Desktop & Tablet */}
                       <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:flex flex-col justify-center items-center text-white p-6">
                         <h3 className="text-lg mb-2">{project.title}</h3>
-                        <p className="text-xs mb-4 whitespace-nowrap">{project.date}</p>
+                        <p className="text-xs mb-4 whitespace-nowrap">{project.projectDuration}</p>
                         <div className="flex flex-wrap gap-2 justify-center">
                           {project.category.map((tag, tagIndex) => (
                             <span key={tagIndex} className="text-xs">
-                              {tag}
+                              {tag}{tagIndex < project.category.length - 1 ? ", " : ""}
                             </span>
                           ))}
                         </div>
@@ -242,12 +246,12 @@ export default function Works() {
                   <div className="space-y-2 mt-4 md:hidden">
                     <div className="flex items-baseline justify-between">
                       <h3 className="text-lg text-black">{project.title}</h3>
-                      <p className="text-xs text-black whitespace-nowrap">{project.date}</p>
+                      <p className="text-xs text-black whitespace-nowrap">{project.projectDuration}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {project.category.map((tag, tagIndex) => (
                         <span key={tagIndex} className="text-xs text-gray-600">
-                          {tag}
+                          {tag}{tagIndex < project.category.length - 1 ? ", " : ""}
                         </span>
                       ))}
                     </div>
