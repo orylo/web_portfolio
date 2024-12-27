@@ -39,18 +39,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "자연에서 영감을 받은 컬러 팔레트와 유기적인 형태를 활용하여 브랜드의 정체성을 표현했습니다. 패키지 디자인에서도 지속가능성을 고려한 솔루션을 제안했습니다.",
       gridImages: [
-        "/images/brand-identity-cosmetic/solution1.jpg",
-        "/images/brand-identity-cosmetic/solution2.jpg"
+        "./images/brand-identity-cosmetic/solution1.jpg",
+        "./images/brand-identity-cosmetic/solution2.jpg"
       ]
     },
     result: {
       description: "새로운 브랜드 아이덴티티는 타겟 고객층으로부터 긍정적인 반응을 얻었으며, 브랜드의 시장 포지셔닝을 효과적으로 강화했습니다.",
       fullImages: [
-        "/images/brand-identity-cosmetic/result1.jpg",
-        "/images/brand-identity-cosmetic/result2.jpg"
+        "./images/brand-identity-cosmetic/result1.jpg",
+        "./images/brand-identity-cosmetic/result2.jpg"
       ]
     },
-    mainImage: "/images/brand-identity-cosmetic/main.jpg"
+    mainImage: "./images/brand-identity-cosmetic/main.jpg"
   },
   "editorial-magazine": {
     id: "editorial-magazine",
@@ -68,18 +68,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "그리드 시스템을 기반으로 한 레이아웃과 현대적인 타이포그래피를 활용하여 매거진의 정체성을 구축했습니다. 시각적 요소와 텍스트의 균형을 고려했습니다.",
       gridImages: [
-        "/images/editorial-magazine/solution1.jpg",
-        "/images/editorial-magazine/solution2.jpg"
+        "./images/editorial-magazine/solution1.jpg",
+        "./images/editorial-magazine/solution2.jpg"
       ]
     },
     result: {
       description: "매거진의 새로운 디자인은 독자들로부터 높은 평가를 받았으며, 브랜드의 프리미엄 이미지 구축에 기여했습니다.",
       fullImages: [
-        "/images/editorial-magazine/result1.jpg",
-        "/images/editorial-magazine/result2.jpg"
+        "./images/editorial-magazine/result1.jpg",
+        "./images/editorial-magazine/result2.jpg"
       ]
     },
-    mainImage: "/images/editorial-magazine/main.jpg"
+    mainImage: "./images/editorial-magazine/main.jpg"
   },
   "campaign-sustainability": {
     id: "campaign-sustainability",
@@ -97,18 +97,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "환경 문제의 심각성과 해결책을 동시에 제시하는 비주얼 전략을 수립했습니다. 모션그래픽을 활용하여 메시지의 전달력을 높였습니다.",
       gridImages: [
-        "/images/campaign-sustainability/solution1.jpg",
-        "/images/campaign-sustainability/solution2.jpg"
+        "./images/campaign-sustainability/solution1.jpg",
+        "./images/campaign-sustainability/solution2.jpg"
       ]
     },
     result: {
       description: "캠페인은 소셜 미디어에서 높은 참여도를 기록했으며, 브랜드의 환경 보호 의지를 효과적으로 전달했습니다.",
       fullImages: [
-        "/images/campaign-sustainability/result1.jpg",
-        "/images/campaign-sustainability/result2.jpg"
+        "./images/campaign-sustainability/result1.jpg",
+        "./images/campaign-sustainability/result2.jpg"
       ]
     },
-    mainImage: "/images/campaign-sustainability/main.jpg"
+    mainImage: "./images/campaign-sustainability/main.jpg"
   },
   "social-media-content": {
     id: "social-media-content",
@@ -126,18 +126,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "각 플랫폼의 특성을 고려한 맞춤형 콘텐츠를 제작하고, 일관된 비주얼 스타일을 통해 브랜드 인지도를 강화했습니다.",
       gridImages: [
-        "/images/social-media-content/solution1.jpg",
-        "/images/social-media-content/solution2.jpg"
+        "./images/social-media-content/solution1.jpg",
+        "./images/social-media-content/solution2.jpg"
       ]
     },
     result: {
       description: "소셜 미디어 채널의 팔로워 수가 증가했으며, 콘텐츠 인게이지먼트 율이 크게 향상되었습니다.",
       fullImages: [
-        "/images/social-media-content/result1.jpg",
-        "/images/social-media-content/result2.jpg"
+        "./images/social-media-content/result1.jpg",
+        "./images/social-media-content/result2.jpg"
       ]
     },
-    mainImage: "/images/social-media-content/main.jpg"
+    mainImage: "./images/social-media-content/main.jpg"
   },
   "exhibition-design": {
     id: "exhibition-design",
@@ -155,18 +155,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "작품의 시대별 특성을 고려한 공간 분할과 조명 계획을 수립했으며, 관람객의 동선을 고려한 그래픽 요소를 배치했습니다.",
       gridImages: [
-        "/images/exhibition-design/solution1.jpg",
-        "/images/exhibition-design/solution2.jpg"
+        "./images/exhibition-design/solution1.jpg",
+        "./images/exhibition-design/solution2.jpg"
       ]
     },
     result: {
       description: "전시는 3개월간 5만 명 이상의 관람객을 동원했으며, 미술계와 언론으로부터 호평을 받았습니다.",
       fullImages: [
-        "/images/exhibition-design/result1.jpg",
-        "/images/exhibition-design/result2.jpg"
+        "./images/exhibition-design/result1.jpg",
+        "./images/exhibition-design/result2.jpg"
       ]
     },
-    mainImage: "/images/exhibition-design/main.jpg"
+    mainImage: "./images/exhibition-design/main.jpg"
   },
   "package-design": {
     id: "package-design",
@@ -184,18 +184,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "고급스러운 소재와 특수 인쇄 기법을 활용하여 브랜드의 프리미엄 가치를 표현했습니다. 시즌 컨셉에 맞는 그래픽 요소를 개발하여 적용했습니다.",
       gridImages: [
-        "/images/package-design/solution1.jpg",
-        "/images/package-design/solution2.jpg"
+        "./images/package-design/solution1.jpg",
+        "./images/package-design/solution2.jpg"
       ]
     },
     result: {
       description: "한정판 패키지는 출시 직후 완판을 기록했으며, 소셜 미디어에서 높은 화제성을 기록했습니다.",
       fullImages: [
-        "/images/package-design/result1.jpg",
-        "/images/package-design/result2.jpg"
+        "./images/package-design/result1.jpg",
+        "./images/package-design/result2.jpg"
       ]
     },
-    mainImage: "/images/package-design/main.jpg"
+    mainImage: "./images/package-design/main.jpg"
   },
   "brand-campaign": {
     id: "brand-campaign",
@@ -213,18 +213,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "디지털과 아날로그를 아우르는 크로스 미디어 전략을 수립했으며, 일관된 브랜드 메시지를 다양한 채널을 통해 전달했습니다.",
       gridImages: [
-        "/images/brand-campaign/solution1.jpg",
-        "/images/brand-campaign/solution2.jpg"
+        "./images/brand-campaign/solution1.jpg",
+        "./images/brand-campaign/solution2.jpg"
       ]
     },
     result: {
       description: "캠페인을 통해 기업의 브랜드 가치가 상승했으며, 신규 고객 유입이 크게 증가했습니다.",
       fullImages: [
-        "/images/brand-campaign/result1.jpg",
-        "/images/brand-campaign/result2.jpg"
+        "./images/brand-campaign/result1.jpg",
+        "./images/brand-campaign/result2.jpg"
       ]
     },
-    mainImage: "/images/brand-campaign/main.jpg"
+    mainImage: "./images/brand-campaign/main.jpg"
   },
   "motion-graphics": {
     id: "motion-graphics",
@@ -242,18 +242,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "브랜드의 핵심 가치를 상징하는 그래픽 요소들을 개발하고, 이를 역동적인 모션으로 구현했습니다. 음악과 모션의 조화를 통해 감성적인 스토리텔링을 완성했습니다.",
       gridImages: [
-        "/images/motion-graphics/solution1.jpg",
-        "/images/motion-graphics/solution2.jpg"
+        "./images/motion-graphics/solution1.jpg",
+        "./images/motion-graphics/solution2.jpg"
       ]
     },
     result: {
       description: "제작된 모션그래픽은 다양한 채널에서 활용되어 브랜드의 이미지 제고에 기여했습니다.",
       fullImages: [
-        "/images/motion-graphics/result1.jpg",
-        "/images/motion-graphics/result2.jpg"
+        "./images/motion-graphics/result1.jpg",
+        "./images/motion-graphics/result2.jpg"
       ]
     },
-    mainImage: "/images/motion-graphics/main.jpg"
+    mainImage: "./images/motion-graphics/main.jpg"
   },
   "annual-report": {
     id: "annual-report",
@@ -271,18 +271,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "체계적인 그리드 시스템을 바탕으로 정보의 위계를 명확히 했으며, 인포그래픽을 활용하여 데이터를 직관적으로 전달했습니다.",
       gridImages: [
-        "/images/annual-report/solution1.jpg",
-        "/images/annual-report/solution2.jpg"
+        "./images/annual-report/solution1.jpg",
+        "./images/annual-report/solution2.jpg"
       ]
     },
     result: {
       description: "보고서는 이해관계자들로부터 높은 가독성과 디자인 완성도에 대해 긍정적인 평가를 받았습니다.",
       fullImages: [
-        "/images/annual-report/result1.jpg",
-        "/images/annual-report/result2.jpg"
+        "./images/annual-report/result1.jpg",
+        "./images/annual-report/result2.jpg"
       ]
     },
-    mainImage: "/images/annual-report/main.jpg"
+    mainImage: "./images/annual-report/main.jpg"
   },
   "brand-guidelines": {
     id: "brand-guidelines",
@@ -300,18 +300,18 @@ export const projectDetails: Record<string, ProjectDetail> = {
     solution: {
       description: "브랜드의 핵심 요소들을 정의하고 이를 다양한 상황에 적용할 수 있는 가이드라인을 개발했습니다. 디지털 환경에서의 활용성을 특히 고려했습니다.",
       gridImages: [
-        "/images/brand-guidelines/solution1.jpg",
-        "/images/brand-guidelines/solution2.jpg"
+        "./images/brand-guidelines/solution1.jpg",
+        "./images/brand-guidelines/solution2.jpg"
       ]
     },
     result: {
       description: "구축된 가이드라인을 통해 일관된 브랜드 커뮤니케이션이 가능해졌으며, 브랜드의 전문성이 강화되었습니다.",
       fullImages: [
-        "/images/brand-guidelines/result1.jpg",
-        "/images/brand-guidelines/result2.jpg"
+        "./images/brand-guidelines/result1.jpg",
+        "./images/brand-guidelines/result2.jpg"
       ]
     },
-    mainImage: "/images/brand-guidelines/main.jpg"
+    mainImage: "./images/brand-guidelines/main.jpg"
   }
 };
 
