@@ -26,6 +26,12 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <footer className="mt-[50px] border-t border-black">
+        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+        </div>
+      </footer>
     </div>
   );
 }

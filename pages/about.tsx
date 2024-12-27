@@ -47,8 +47,8 @@ export default function About() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-40 border-t border-gray-200">
-        <div className="max-w-[1728px] mx-auto px-16 py-20">
+      <footer className="mt-[50px] border-t border-black">
+        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xs uppercase mb-4">Tel.</h3>

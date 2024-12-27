@@ -36,10 +36,10 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <main className="pt-32">
+      <main>
         <div className="max-w-[1728px] mx-auto px-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 md:divide-x md:divide-black md:pt-32 md:pb-0">
+            <div className="md:pr-20 pt-32 md:pt-0 border-b border-black pb-12 md:border-b-0 md:pb-0">
               <h1 className="text-4xl font-light mb-8">Contact</h1>
               <p className="text-lg text-gray-600 leading-relaxed mb-12">
                 프로젝트 협업이나 문의사항이 있으시다면 언제든 연락 주세요.
@@ -76,7 +76,7 @@ export default function Contact() {
                 </div>
               </div>
             </div>
-            <div>
+            <div className="md:pl-20 pt-8 md:pt-0">
               <form ref={form} onSubmit={handleSubmit} className="space-y-8">
                 <div>
                   <label htmlFor="user_name" className="block text-sm text-gray-600 mb-2">
@@ -140,9 +140,8 @@ export default function Contact() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-40 border-t border-gray-200">
-        <div className="max-w-[1728px] mx-auto px-16 py-20">
+      <footer className="mt-[50px] border-t border-black">
+        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xs uppercase mb-4">Tel.</h3>
