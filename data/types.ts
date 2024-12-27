@@ -47,7 +47,6 @@ export interface ProjectResult {
 export interface ProjectDetail {
   id: string;
   title: string;
-  description: string;
   thumbnail: string;
   slogan: string;
   client: string;

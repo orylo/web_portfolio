@@ -227,9 +227,9 @@ export default function Works() {
                       {/* Hover Overlay - Desktop & Tablet */}
                       <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:flex flex-col justify-center items-center text-white p-6">
                         <h3 className="text-lg mb-2">{project.title}</h3>
-                        <p className="text-xs mb-4">{project.date}</p>
-                        <div className="flex gap-2">
-                          {project.category.slice(0, 2).map((tag, tagIndex) => (
+                        <p className="text-xs mb-4 whitespace-nowrap">{project.date}</p>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {project.category.map((tag, tagIndex) => (
                             <span key={tagIndex} className="text-xs">
                               {tag}
                             </span>
@@ -242,14 +242,11 @@ export default function Works() {
                   <div className="space-y-2 mt-4 md:hidden">
                     <div className="flex items-baseline justify-between">
                       <h3 className="text-lg text-black">{project.title}</h3>
-                      <p className="text-xs text-black">{project.date}</p>
+                      <p className="text-xs text-black whitespace-nowrap">{project.date}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {project.category.slice(0, 2).map((tag, tagIndex) => (
-                        <span
-                          key={tagIndex}
-                          className="text-xs text-black"
-                        >
+                      {project.category.map((tag, tagIndex) => (
+                        <span key={tagIndex} className="text-xs text-gray-600">
                           {tag}
                         </span>
                       ))}

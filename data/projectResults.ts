@@ -43,6 +43,7 @@ export const projectResults: Record<string, ProjectResult> = {
       }
     ]
   },
+
   "editorial-magazine": {
     components: [
       {
@@ -74,6 +75,7 @@ export const projectResults: Record<string, ProjectResult> = {
       }
     ]
   },
+  
   "campaign-sustainability": {
     components: [
       {
