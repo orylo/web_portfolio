@@ -1,6 +1,38 @@
 import Navigation from '../components/Navigation';
+import { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 export default function Contact() {
+  const form = useRef<HTMLFormElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.current) return;
+
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      await emailjs.sendForm(
+        'service_5h3nxaz',
+        'template_f77jsg4',
+        form.current,
+        'KLrXEhsMtVhcpNvWz'
+      );
+      setSubmitStatus('success');
+      if (form.current) {
+        form.current.reset();
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+      console.error('Failed to send email:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -17,41 +49,57 @@ export default function Contact() {
                 <div>
                   <h2 className="text-2xl font-light mb-4">Contact Info</h2>
                   <div className="space-y-2">
-                    <p className="text-gray-600">contact@example.com</p>
-                    <p className="text-gray-600">+82 10-1234-5678</p>
-                    <p className="text-gray-600">Seoul, South Korea</p>
+                    <p className="text-gray-600">orylo0424@gmail.com</p>
+                    <p className="text-gray-600">+82 (0)10 5098 0424</p>
                   </div>
                 </div>
                 <div>
                   <h2 className="text-2xl font-light mb-4">Social</h2>
                   <div className="space-y-2">
-                    <p className="text-gray-600">Instagram</p>
-                    <p className="text-gray-600">Behance</p>
-                    <p className="text-gray-600">LinkedIn</p>
+                    <a 
+                      href="https://www.instagram.com/_orylo" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-black transition-colors duration-200"
+                    >
+                      Instagram
+                    </a>
+                    <a 
+                      href="https://www.linkedin.com/in/sunny-sunghee-lee/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block text-gray-600 hover:text-black transition-colors duration-200"
+                    >
+                      LinkedIn
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
             <div>
-              <form className="space-y-8">
+              <form ref={form} onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <label htmlFor="name" className="block text-sm text-gray-600 mb-2">
+                  <label htmlFor="user_name" className="block text-sm text-gray-600 mb-2">
                     이름
                   </label>
                   <input
                     type="text"
-                    id="name"
+                    id="user_name"
+                    name="user_name"
+                    required
                     className="w-full px-0 py-2 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-black text-lg"
                     placeholder="이름을 입력하세요"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm text-gray-600 mb-2">
+                  <label htmlFor="user_email" className="block text-sm text-gray-600 mb-2">
                     이메일
                   </label>
                   <input
                     type="email"
-                    id="email"
+                    id="user_email"
+                    name="user_email"
+                    required
                     className="w-full px-0 py-2 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-black text-lg"
                     placeholder="이메일을 입력하세요"
                   />
@@ -62,6 +110,8 @@ export default function Contact() {
                   </label>
                   <textarea
                     id="message"
+                    name="message"
+                    required
                     rows={6}
                     className="w-full px-0 py-2 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-black text-lg resize-none"
                     placeholder="메시지를 입력하세요"
@@ -69,10 +119,21 @@ export default function Contact() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-black text-white py-4 text-lg hover:bg-gray-900 transition-colors duration-200"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 text-lg transition-colors duration-200 ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : 'bg-black text-white hover:bg-gray-900'
+                  }`}
                 >
-                  보내기
+                  {isSubmitting ? '전송 중...' : '보내기'}
                 </button>
+                {submitStatus === 'success' && (
+                  <p className="text-green-600 text-center">메시지가 성공적으로 전송되었습니다.</p>
+                )}
+                {submitStatus === 'error' && (
+                  <p className="text-red-600 text-center">메시지 전송에 실패했습니다. 다시 시도해주세요.</p>
+                )}
               </form>
             </div>
           </div>
@@ -92,7 +153,6 @@ export default function Contact() {
             <div>
               <h3 className="text-xs uppercase mb-4">Contact</h3>
               <p className="text-sm text-gray-600">
-                Communication Designer<br />
                 orylo0424@gmail.com
               </p>
             </div>

@@ -59,7 +59,6 @@ export default function About() {
             <div>
               <h3 className="text-xs uppercase mb-4">Contact</h3>
               <p className="text-sm text-gray-600">
-                Communication Designer<br />
                 orylo0424@gmail.com
               </p>
             </div>
