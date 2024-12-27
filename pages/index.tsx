@@ -5,21 +5,21 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <main className="pt-32">
-        <div className="container mx-auto px-4 sm:px-8 md:px-12 lg:px-16 transition-all duration-300 ease-in-out">
+        <div className="max-w-[1728px] mx-auto px-16">
           <div className="space-y-4">
-            <h1 className="text-7xl font-light text-black transition-all duration-300 ease-in-out">
-              Creative
+            <h1 className="text-7xl font-light text-black">
+              Communication
               <br />
-              Web Developer
+              Designer
             </h1>
-            <p className="text-xl text-gray-500 max-w-2xl transition-all duration-300 ease-in-out">
-              안녕하세요, 혁신적인 웹 경험을 만드는 개발자입니다.
-              사용자 중심의 디자인과 효율적인 개발을 추구합니다.
+            <p className="text-xl text-gray-500 max-w-2xl">
+              브랜드의 가치를 시각적 언어로 표현하는 커뮤니케이션 디자이너입니다.
+              전략적 사고와 창의적인 디자인으로 브랜드 스토리를 전달합니다.
             </p>
           </div>
-          <div className="mt-20 transition-all duration-300 ease-in-out">
+          <div className="mt-20">
             <img
-              src="/hero-image.jpg"
+              src="./hero-image.jpg"
               alt="Hero Image"
               className="w-full h-[600px] object-cover"
             />

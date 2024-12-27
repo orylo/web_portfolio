@@ -4,11 +4,11 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <main className="pt-32 px-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="pt-32">
+        <div className="max-w-[1728px] mx-auto px-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
             <div>
-              <h1 className="text-5xl font-light mb-8">Contact</h1>
+              <h1 className="text-4xl font-light mb-8">Contact</h1>
               <p className="text-lg text-gray-600 leading-relaxed mb-12">
                 프로젝트 협업이나 문의사항이 있으시다면 언제든 연락 주세요.
                 최대한 빠른 시일 내에 답변 드리도록 하겠습니다.
@@ -25,9 +25,9 @@ export default function Contact() {
                 <div>
                   <h2 className="text-2xl font-light mb-4">Social</h2>
                   <div className="space-y-2">
-                    <p className="text-gray-600">Github</p>
+                    <p className="text-gray-600">Instagram</p>
+                    <p className="text-gray-600">Behance</p>
                     <p className="text-gray-600">LinkedIn</p>
-                    <p className="text-gray-600">Twitter</p>
                   </div>
                 </div>
               </div>
@@ -78,6 +78,34 @@ export default function Contact() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="mt-40 border-t border-gray-200">
+        <div className="max-w-[1728px] mx-auto px-16 py-20">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-xs uppercase mb-4">Tel.</h3>
+              <p className="text-sm text-gray-600">
+                +82 (0)10 5098 0424
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase mb-4">Contact</h3>
+              <p className="text-sm text-gray-600">
+                Communication Designer<br />
+                orylo0424@gmail.com
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase mb-4">Copyright</h3>
+              <p className="text-sm text-gray-600">
+                orylo© 2024.<br />
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
