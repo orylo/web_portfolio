@@ -18,18 +18,10 @@ export default function Works() {
   const router = useRouter();
 
   useEffect(() => {
-    const savedTag = localStorage.getItem('selectedTag');
-    if (savedTag) {
-      setSelectedTag(savedTag);
-      const newProjects = savedTag === 'ALL' 
-        ? Object.values(projectDetails) 
-        : Object.values(projectDetails).filter(project => project.category.includes(savedTag));
-      setFilteredProjects(newProjects);
-    } else {
-      // 저장된 태그가 없는 경우 'ALL'로 설정하고 모든 프로젝트 표시
-      localStorage.setItem('selectedTag', 'ALL');
-      setFilteredProjects(Object.values(projectDetails));
-    }
+    // 페이지 로드 시 모든 프로젝트 표시
+    setSelectedTag('ALL');
+    setFilteredProjects(Object.values(projectDetails));
+    localStorage.setItem('selectedTag', 'ALL');
   }, []);
 
   useEffect(() => {
