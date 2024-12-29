@@ -364,10 +364,21 @@ const ConveyorBelt = () => {
       });
     });
 
+    // 렌더링 업데이트를 위한 상태
+    let animationFrameId: number;
+    const updatePositions = () => {
+      // 강제 리렌더링을 통해 도형 위치 업데이트
+      setOpenedGifts(prev => new Set(prev));
+      animationFrameId = requestAnimationFrame(updatePositions);
+    };
+
     // 엔진 실행
     const runner = Matter.Runner.create();
     Matter.Runner.run(runner, engine);
     Matter.Render.run(render);
+
+    // 애니메이션 시작
+    updatePositions();
 
     // 선물 생성 시작
     const createGift = () => {
@@ -382,6 +393,9 @@ const ConveyorBelt = () => {
       render.canvas.removeEventListener('mousedown', handleMouseDown);
       render.canvas.removeEventListener('mousemove', handleMouseMove);
       render.canvas.removeEventListener('mouseup', handleMouseUp);
+
+      // 애니메이션 정리
+      cancelAnimationFrame(animationFrameId);
 
       // Matter.js 정리
       Matter.Runner.stop(runner);
@@ -440,7 +454,8 @@ const ConveyorBelt = () => {
                 transform: `translate3d(${shapeBody.position.x}px, ${shapeBody.position.y}px, 0) rotate(${shapeBody.angle}rad)`,
                 width: shapeSize * 16,
                 height: shapeSize * 16,
-                transformOrigin: 'center'
+                transformOrigin: 'center',
+                willChange: 'transform'
               }}
             >
               <ShapeRenderer
