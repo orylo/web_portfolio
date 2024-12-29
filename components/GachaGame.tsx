@@ -13,8 +13,8 @@ interface GachaItem {
 
 const GachaGame = () => {
   const sceneRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<Matter.Engine>();
-  const renderRef = useRef<Matter.Render>();
+  const engineRef = useRef<Matter.Engine | null>(null);
+  const renderRef = useRef<Matter.Render | null>(null);
   const gachaItemsRef = useRef<GachaItem[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
 
