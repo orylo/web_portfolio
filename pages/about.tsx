@@ -1,77 +1,240 @@
+import { useState } from 'react';
+import { NextPage } from 'next';
+import Head from 'next/head';
 import Navigation from '../components/Navigation';
 
-export default function About() {
+interface Section {
+  id: string;
+  title: string;
+  content: {
+    question: string;
+    answer: string[];
+  }[];
+  isOpen: boolean;
+}
+
+const About: NextPage = () => {
+  const [sections, setSections] = useState<Section[]>([
+    {
+      id: "work-experience",
+      title: "Work Experience",
+      content: [
+        {
+          question: "What is your current role?",
+          answer: [
+            "Senior UX Designer @ Meta (2021 - Present)",
+            "• Leading design initiatives for Meta's AR/VR products in the metaverse team",
+            "• Collaborating with cross-functional teams to develop innovative user experiences",
+            "• Mentoring junior designers and conducting design workshops",
+            "",
+            "Product Designer @ Google (2018 - 2021)",
+            "• Designed user interfaces for Google Cloud Platform products",
+            "• Led the redesign of key dashboard features, improving user engagement by 40%",
+            "• Collaborated with engineers and product managers to implement design solutions"
+          ]
+        },
+        {
+          question: "What was your previous experience?",
+          answer: [
+            "UI/UX Designer @ Apple (2016 - 2018)",
+            "• Contributed to the design of iOS native applications",
+            "• Developed and maintained design systems for consistent user experience",
+            "• Participated in user research and usability testing"
+          ]
+        }
+      ],
+      isOpen: false
+    },
+    {
+      id: "education",
+      title: "Education",
+      content: [
+        {
+          question: "What is your educational background?",
+          answer: [
+            "Master of Design @ Royal College of Art (2014 - 2016)",
+            "• Specialized in Digital Experience Design",
+            "• Thesis: 'The Future of Human-Computer Interaction in Mixed Reality'"
+          ]
+        },
+        {
+          question: "What was your undergraduate study?",
+          answer: [
+            "Bachelor of Fine Arts @ Rhode Island School of Design (2010 - 2014)",
+            "• Major in Graphic Design",
+            "• Minor in Digital Media",
+            "• Dean's List: 2012-2014"
+          ]
+        }
+      ],
+      isOpen: false
+    },
+    {
+      id: "skills",
+      title: "Skills & Expertise",
+      content: [
+        {
+          question: "What are your core design skills?",
+          answer: [
+            "Design",
+            "• User Experience (UX) Design",
+            "• User Interface (UI) Design",
+            "• Interaction Design",
+            "• Visual Design",
+            "• Prototyping"
+          ]
+        },
+        {
+          question: "What tools do you use?",
+          answer: [
+            "Tools",
+            "• Figma, Sketch, Adobe Creative Suite",
+            "• Protopie, Principle, Framer",
+            "• HTML, CSS, JavaScript"
+          ]
+        },
+        {
+          question: "What are your soft skills?",
+          answer: [
+            "Soft Skills",
+            "• Project Management",
+            "• Team Leadership",
+            "• Design Thinking",
+            "• Problem Solving"
+          ]
+        }
+      ],
+      isOpen: false
+    },
+    {
+      id: "awards",
+      title: "Awards & Recognition",
+      content: [
+        {
+          question: "What are your recent achievements?",
+          answer: [
+            "2023 - Red Dot Design Award",
+            "• Best of the Best in Digital Design Category",
+            "",
+            "2022 - IF Design Award",
+            "• Gold Award in UX/UI Design"
+          ]
+        },
+        {
+          question: "Any other recognition?",
+          answer: [
+            "2021 - Adobe Design Achievement Awards",
+            "• Finalist in Experience Design"
+          ]
+        }
+      ],
+      isOpen: false
+    }
+  ]);
+
+  const toggleSection = (id: string) => {
+    setSections(sections.map(section => 
+      section.id === id ? { ...section, isOpen: !section.isOpen } : section
+    ));
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      <Navigation />
-      <main className="pt-32">
-        <div className="max-w-[1728px] mx-auto px-16">
-          {/* Main Introduction */}
-          <div className="mb-40">
-            <p className="text-2xl font-light leading-relaxed max-w-4xl text-black">
-              <strong className="font-normal">서울에 기반을 둔 커뮤니케이션 디자이너입니다.</strong> 브랜드의 가치를 시각적 언어로 표현하며, 
-              제품 디자인부터 웹사이트, SNS 피드, 패키지 등 모든 것이 브랜딩의 일부라고 믿습니다. 
-              디지털 채널로의 전환이 가속화됨에 따라 디지털 프로덕트에도 큰 관심을 가지고 있으며, 
-              물리적 경험에서 디지털 경험까지 브랜드 경험의 폭을 넓혀가고 있습니다.
+    <div className="min-h-screen flex flex-col">
+      <Head>
+        <title>About - Portfolio</title>
+        <meta name="description" content="About me - Portfolio" />
+      </Head>
+
+      <div className="fixed inset-0 bg-gray-200" style={{ zIndex: -1 }}></div>
+
+      <div className="relative" style={{ zIndex: 1 }}>
+        <Navigation />
+
+        <main className="flex-grow">
+          <div className="max-w-[1728px] mx-auto px-4 md:px-16 pt-32 pb-8">
+            <p className="text-[3rem] leading-normal mb-16 font-light">
+              I am a passionate designer focused on creating meaningful digital experiences 
+              that bridge the gap between human needs and technological possibilities. 
+              With over 8 years of experience in UX/UI design, I've had the privilege 
+              of working with some of the world's leading tech companies to shape the 
+              future of digital interactions.
             </p>
           </div>
 
-          {/* Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
-            <div>
-              <h2 className="text-xs uppercase tracking-wider mb-8 text-black">WHO I AM</h2>
-              <p className="text-lg text-black leading-relaxed">
-                브랜딩에 대한 깊은 열정을 가진 크리에이티브 디자이너입니다. 
-                물리적 제품에서 디지털 경험까지 모든 것에서 브랜딩을 볼 수 있는 능력이 저의 강점입니다. 
-                고객의 메시지가 대상 청중과 공명할 수 있도록 일관된 브랜드 메시지를 만들어내는 것을 추구합니다.
-              </p>
-            </div>
-            <div>
-              <h2 className="text-xs uppercase tracking-wider mb-8 text-black">DIGITAL EXPANSION</h2>
-              <p className="text-lg text-black leading-relaxed">
-                디지털 시대에 맞춰 브랜드 경험을 확장하고 있습니다. 
-                사용자 경험을 최우선으로 생각하며, 최신 디지털 트렌드를 연구하고 적용합니다. 
-                시각적 디자인과 기술적 구현 사이의 균형을 맞추어 최적의 결과물을 만들어냅니다.
-              </p>
-            </div>
-            <div>
-              <h2 className="text-xs uppercase tracking-wider mb-8 text-black">MEANINGFUL CONNECTION</h2>
-              <p className="text-lg text-black leading-relaxed">
-                새로운 브랜드를 만들거나 기존 브랜드를 리프레시하는 것 모두를 돕습니다. 
-                시각적 아이덴티티와 메시징에서 사용자 경험 디자인까지, 
-                대상 청중과 의미 있는 연결을 만들어내는 전문성을 보유하고 있습니다.
-              </p>
-            </div>
+          <div className="space-y-0 bg-white">
+            {sections.map((section) => (
+              <div key={section.id} className="border-t border-black">
+                <button
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full hover:bg-gray-50 transition-colors"
+                >
+                  <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-4 flex justify-between items-center">
+                    <span className="text-[2rem] font-medium">{section.title}</span>
+                    <span className="transform transition-transform text-[2rem]">
+                      {section.isOpen ? '−' : '+'}
+                    </span>
+                  </div>
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 ${
+                    section.isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-12">
+                    <div className="grid md:grid-cols-2 md:divide-x md:divide-black">
+                      <div className="pr-8 h-full">
+                        <div className="bg-gray-300 h-full"></div>
+                      </div>
+                      <div className="pl-8">
+                        {section.content.map((item, index) => (
+                          <div key={index} className="mb-16 last:mb-0">
+                            <h3 className="text-lg font-medium mb-6">{item.question}</h3>
+                            <div className="space-y-2 text-gray-600">
+                              {item.answer.map((line, lineIndex) => (
+                                <p key={lineIndex} className="whitespace-pre-line">
+                                  {line}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* Footer */}
-      <footer className="mt-[50px] border-t border-black">
-        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-xs uppercase mb-4">Tel.</h3>
-              <p className="text-sm text-gray-600">
-                +82 (0)10 5098 0424
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xs uppercase mb-4">Contact</h3>
-              <p className="text-sm text-gray-600">
-                orylo0424@gmail.com
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xs uppercase mb-4">Copyright</h3>
-              <p className="text-sm text-gray-600">
-                orylo© 2024.<br />
-                All Rights Reserved.
-              </p>
+        <footer className="border-t border-black bg-white">
+          <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="text-xs uppercase mb-4">Tel.</h3>
+                <p className="text-sm text-gray-600">
+                  +82 (0)10 5098 0424
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xs uppercase mb-4">Contact</h3>
+                <p className="text-sm text-gray-600">
+                  orylo0424@gmail.com
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xs uppercase mb-4">Copyright</h3>
+                <p className="text-sm text-gray-600">
+                  orylo© 2024.<br />
+                  All Rights Reserved.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
-} 
+};
+
+export default About; 
