@@ -1,13 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Matter from 'matter-js';
+
+// debounce 유틸리티 함수
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  
+  const debouncedFunction = (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+  
+  debouncedFunction.cancel = () => {
+    clearTimeout(timeout);
+  };
+  
+  return debouncedFunction;
+};
 
 interface Gift {
   id: number;
   width: number;
   height: number;
-  color: string;
-  shape: 'square' | 'rectangle' | 'tall' | 'wide' | 'tiny' | 'huge';
+  boxIndex: number;
+  scale: number;
   surprise: {
     type: 'shape';
     shape: 'circle' | 'star' | 'triangle' | 'heart' | 'diamond';
@@ -16,51 +32,28 @@ interface Gift {
   body?: Matter.Body;
 }
 
-const generateRandomGift = (index: number): Gift => {
-  const shapes = ['square', 'rectangle', 'tall', 'wide', 'tiny', 'huge'] as const;
-  const surpriseShapes = ['circle', 'star', 'triangle', 'heart', 'diamond'] as const;
-  const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5',
-    '#FFB6B9', '#61C0BF', '#BBE1FA', '#D4E157', '#FFD93D', '#FF8B94'
-  ];
-  
-  const shape = shapes[Math.floor(Math.random() * shapes.length)];
-  let width = 0;
-  let height = 0;
+const TOTAL_GIFT_BOXES = 19;
 
-  switch (shape) {
-    case 'square':
-      width = Math.random() * 40 + 80; // 80-120px
-      height = width;
-      break;
-    case 'rectangle':
-      width = Math.random() * 60 + 100; // 100-160px
-      height = width * 0.75;
-      break;
-    case 'tall':
-      width = Math.random() * 40 + 60; // 60-100px
-      height = width * 1.8;
-      break;
-    case 'wide':
-      width = Math.random() * 80 + 140; // 140-220px
-      height = width * 0.5;
-      break;
-    case 'tiny':
-      width = Math.random() * 20 + 40; // 40-60px
-      height = width;
-      break;
-    case 'huge':
-      width = Math.random() * 60 + 160; // 160-220px
-      height = width * 0.9;
-      break;
-  }
+const surpriseShapes = ['circle', 'star', 'triangle', 'heart', 'diamond'] as const;
+const colors = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5',
+  '#FFB6B9', '#61C0BF', '#BBE1FA', '#D4E157', '#FFD93D', '#FF8B94'
+];
+
+const generateRandomGift = (index: number): Gift => {
+  const boxIndex = Math.floor(Math.random() * TOTAL_GIFT_BOXES) + 1;
+  const scale = 1 + Math.random() * 0.3; // 100% ~ 130% 크기
+  
+  // 기본 크기를 2배로 증가
+  const baseWidth = 160; // 기존 80의 2배
+  const baseHeight = 160; // 정사각형 기준
 
   return {
     id: index,
-    width,
-    height,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    shape,
+    width: baseWidth * scale,
+    height: baseHeight * scale,
+    boxIndex,
+    scale,
     surprise: {
       type: 'shape',
       shape: surpriseShapes[Math.floor(Math.random() * surpriseShapes.length)],
@@ -115,122 +108,150 @@ const ShapeRenderer = ({ shape, color, size }: { shape: string; color: string; s
   }
 };
 
+// 컨베이어 벨트 패턴 생성을 위한 컴포넌트
+const ConveyorPattern = () => {
+  const segmentWidth = 180;
+  const segmentHeight = 180;
+  const [containerWidth, setContainerWidth] = useState(0);
+  
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      setContainerWidth(window.innerWidth);
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    return () => window.removeEventListener('resize', updateContainerWidth);
+  }, []);
+
+  const requiredSegments = Math.ceil((containerWidth * 3) / segmentWidth) + 4;
+  const segments = Array.from({ length: requiredSegments });
+
+  return (
+    <div 
+      style={{
+        position: 'absolute',
+        left: `-${segmentWidth}px`,
+        width: `${containerWidth * 3 + segmentWidth * 2}px`,
+        height: `${segmentHeight}px`,
+        backgroundColor: '#2A2A2A',
+        display: 'flex',
+        fontSize: 0,
+        lineHeight: 0
+      }}
+    >
+      {segments.map((_, index) => (
+        <img
+          key={index}
+          src="/patterns/conveyor-pattern.svg"
+          alt=""
+          style={{
+            width: `${segmentWidth}px`,
+            height: `${segmentHeight}px`,
+            display: 'block',
+            flexShrink: 0
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const ConveyorBelt = () => {
+  const [gifts, setGifts] = useState<Gift[]>([]);
   const [openedGifts, setOpenedGifts] = useState<Set<number>>(new Set());
   const [surprises, setSurprises] = useState<Map<number, Gift['surprise']>>(new Map());
+  const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 });
+  const [isDragging, setIsDragging] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
+  const mouseConstraintRef = useRef<Matter.MouseConstraint | null>(null);
+  const conveyorSensorRef = useRef<Matter.Body | null>(null);
   const idCounterRef = useRef(0);
+  const giftBodiesRef = useRef<Gift[]>([]);
+  const giftTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const targetYRef = useRef(0);
 
-  const createPhysicsBody = () => {
-    if (!engineRef.current) return;
+  // window 크기 초기화 및 업데이트
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const updateDimensions = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+      targetYRef.current = window.innerHeight - 100;
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  // 선물 생성 함수
+  const createGift = useCallback(() => {
+    if (!engineRef.current || windowDimensions.width === 0) {
+      console.log('Engine not initialized or window dimensions not set');
+      return;
+    }
+
+    const spawnX = -200;
+    const spawnY = targetYRef.current - 200;
 
     const gift = generateRandomGift(idCounterRef.current++);
-    
-    // 선물 상자 본체
     const body = Matter.Bodies.rectangle(
-      -100,
-      window.innerHeight - 220,
+      spawnX,
+      spawnY,
       gift.width,
       gift.height,
       {
-        mass: 10,
-        restitution: 0.05,
-        friction: 0.8,
-        frictionAir: 0.002,
+        mass: 1,
+        restitution: 0.1,
+        friction: 0.05,
+        frictionAir: 0.001,
         chamfer: { radius: 5 },
-        render: {
-          fillStyle: gift.color,
-          strokeStyle: '#FFFFFF',
-          lineWidth: 2
-        },
+        render: { visible: false },
         label: `gift-${gift.id}`
       }
     );
 
-    // 리본 추가
-    const ribbonHorizontal = Matter.Bodies.rectangle(
-      -100,
-      window.innerHeight - 220,
-      gift.width,
-      4,
-      {
-        render: {
-          fillStyle: '#FFFFFF',
-          opacity: 0.7
-        },
-        isSensor: true,
-        isStatic: false,
-        label: `ribbon-h-${gift.id}`
-      }
-    );
+    Matter.Body.setVelocity(body, { x: 5, y: 0 });
+    Matter.World.add(engineRef.current.world, body);
+    
+    const giftWithBody = { ...gift, body };
+    giftBodiesRef.current.push(giftWithBody);
+    setGifts(prev => [...prev, giftWithBody]);
 
-    const ribbonVertical = Matter.Bodies.rectangle(
-      -100,
-      window.innerHeight - 220,
-      4,
-      gift.height,
-      {
-        render: {
-          fillStyle: '#FFFFFF',
-          opacity: 0.7
-        },
-        isSensor: true,
-        isStatic: false,
-        label: `ribbon-v-${gift.id}`
-      }
-    );
+    if (giftTimerRef.current) {
+      clearTimeout(giftTimerRef.current);
+    }
+    giftTimerRef.current = setTimeout(createGift, 2000);
+  }, [windowDimensions]);
 
-    // 선물 상자와 리본을 하나로 결합
-    const compound = Matter.Body.create({
-      parts: [body, ribbonHorizontal, ribbonVertical],
-      label: `gift-${gift.id}`
-    });
-
-    Matter.Body.setVelocity(compound, { x: 5, y: 0 });
-    Matter.World.add(engineRef.current.world, compound);
-
-    return { body: compound, ...gift };
-  };
-
+  // Matter.js 엔진 초기화
   useEffect(() => {
-    if (!sceneRef.current) return;
-
-    // 엔진 생성
+    if (!sceneRef.current || typeof window === 'undefined' || windowDimensions.width === 0) {
+      return;
+    }
+    
     const engine = Matter.Engine.create({
-      gravity: { x: 0, y: 1 }
+      gravity: { x: 0, y: 0.5 }
     });
     engineRef.current = engine;
 
-    // 렌더러 생성
     const render = Matter.Render.create({
       element: sceneRef.current,
       engine: engine,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: windowDimensions.width,
+        height: windowDimensions.height,
         wireframes: false,
         background: 'transparent'
       }
     });
 
-    // 컨베이어 벨트 (보이지 않는 바닥)
-    const conveyor = Matter.Bodies.rectangle(
-      window.innerWidth / 2,
-      window.innerHeight - 140,
-      window.innerWidth,
-      10,
-      { 
-        isStatic: true,
-        render: { visible: false },
-        friction: 0,
-        label: 'conveyor'
-      }
-    );
-
-    Matter.World.add(engine.world, conveyor);
-
-    // 마우스 컨트롤
+    // 마우스 컨트롤 설정
     const mouse = Matter.Mouse.create(render.canvas);
     const mouseConstraint = Matter.MouseConstraint.create(engine, {
       mouse: mouse,
@@ -239,198 +260,279 @@ const ConveyorBelt = () => {
         render: { visible: false }
       }
     });
+    mouseConstraintRef.current = mouseConstraint;
+
     Matter.World.add(engine.world, mouseConstraint);
+    render.mouse = mouse;
 
-    // 클릭 이벤트 처리
-    let isMouseDown = false;
-    let mouseDownTime = 0;
+    // 드래그 관련 변수
+    let dragStartTime = 0;
+    let dragStartPosition = { x: 0, y: 0 };
 
-    const handleMouseDown = () => {
-      isMouseDown = true;
-      mouseDownTime = Date.now();
-    };
+    // 마우스 다운 이벤트
+    Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
+      dragStartTime = Date.now();
+      dragStartPosition = event.mouse.position;
+      setIsDragging(false);
+    });
 
-    const handleMouseMove = () => {
-      if (isMouseDown && Date.now() - mouseDownTime > 100) {
-        isMouseDown = false;
-      }
-    };
-
-    const handleMouseUp = (event: MouseEvent) => {
-      if (isMouseDown && Date.now() - mouseDownTime <= 100) {
-        const bodies = Matter.Query.point(
-          Matter.Composite.allBodies(engine.world),
-          { x: event.clientX, y: event.clientY }
-        );
-
-        const clickedGift = bodies.find(body => 
-          body.label && body.label.startsWith('gift-') && 
-          !body.label.includes('ribbon')
-        );
-
-        if (clickedGift) {
-          const giftId = parseInt(clickedGift.label.split('-')[1]);
-          
-          if (!openedGifts.has(giftId)) {
-            const position = { ...clickedGift.position };
-            const giftSize = {
-              width: clickedGift.bounds.max.x - clickedGift.bounds.min.x,
-              height: clickedGift.bounds.max.y - clickedGift.bounds.min.y
-            };
-            
-            const baseSize = 80;
-            const scale = Math.max(giftSize.width, giftSize.height) / baseSize;
-            const shapeSize = Math.max(2, Math.min(5, scale * 2));
-            
-            // 선물 내용 생성
-            const gift = generateRandomGift(giftId);
-            const surprise = gift.surprise;
-            
-            // 상태 업데이트
-            setSurprises(prev => new Map(prev).set(giftId, surprise));
-            setOpenedGifts(prev => new Set(prev).add(giftId));
-            
-            // 도형 생성 및 추가
-            const shape = Matter.Bodies.circle(
-              position.x,
-              position.y,
-              shapeSize * 8,
-              {
-                mass: 10,
-                restitution: 0.05,
-                friction: 0.8,
-                frictionAir: 0.002,
-                render: {
-                  visible: false
-                },
-                label: `emoji-${giftId}`
-              }
-            );
-            
-            Matter.Body.setVelocity(shape, { x: 5, y: 0 });
-            Matter.World.add(engine.world, shape);
-            
-            // 선물 상자와 관련된 모든 바디 제거
-            const giftBodies = Matter.Composite.allBodies(engine.world).filter(
-              body => body.label && (
-                body.label === clickedGift.label ||
-                body.label === `ribbon-h-${giftId}` ||
-                body.label === `ribbon-v-${giftId}`
-              )
-            );
-            giftBodies.forEach(body => Matter.World.remove(engine.world, body));
-          }
+    // 마우스 드래그 이벤트
+    Matter.Events.on(mouseConstraint, 'mousemove', (event) => {
+      if (mouseConstraint.body) {
+        const dx = event.mouse.position.x - dragStartPosition.x;
+        const dy = event.mouse.position.y - dragStartPosition.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 5) {
+          setIsDragging(true);
         }
       }
-      isMouseDown = false;
-    };
+    });
 
-    render.canvas.addEventListener('mousedown', handleMouseDown);
-    render.canvas.addEventListener('mousemove', handleMouseMove);
-    render.canvas.addEventListener('mouseup', handleMouseUp);
+    // 마우스 업 이벤트
+    Matter.Events.on(mouseConstraint, 'mouseup', () => {
+      setIsDragging(false);
+    });
 
-    // 컨베이어 벨트 효과
+    // 물리 엔진 업데이트 이벤트
     Matter.Events.on(engine, 'beforeUpdate', () => {
       const bodies = Matter.Composite.allBodies(engine.world);
       bodies.forEach(body => {
-        if (!body.isStatic) {
+        if (!body.isStatic && body.label?.startsWith('gift-')) {
           // 화면 밖으로 나간 물체 제거
-          if (body.position.x > window.innerWidth + 100 || body.position.y > window.innerHeight + 100) {
+          if (body.position.x > windowDimensions.width + 100 || body.position.y > windowDimensions.height + 100) {
             Matter.World.remove(engine.world, body);
-            if (body.label && body.label.startsWith('emoji-')) {
-              setOpenedGifts(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(parseInt(body.label.split('-')[1]));
-                return newSet;
-              });
-            }
+            const giftId = parseInt(body.label.split('-')[1]);
+            giftBodiesRef.current = giftBodiesRef.current.filter(g => g.id !== giftId);
             return;
           }
-          
-          // 컨베이어 벨트 위에 있는 물체 처리
-          if (Math.abs(body.position.y - (window.innerHeight - 180)) < 50) {
+
+          // 컨베이어 벨트 위에 있는 선물상자 처리
+          if (!mouseConstraint.body && Matter.Query.collides(body, [conveyorSensorRef.current!]).length > 0) {
             Matter.Body.setVelocity(body, {
               x: 5,
-              y: body.velocity.y
+              y: 0
             });
-            
-            // 드래그 중이 아닐 때만 회전 방지
-            if (body !== mouseConstraint.body) {
-              Matter.Body.setAngle(body, 0);
-              Matter.Body.setAngularVelocity(body, 0);
-            }
+            Matter.Body.setPosition(body, {
+              x: body.position.x,
+              y: targetYRef.current - 40
+            });
+            Matter.Body.setAngle(body, 0);
           }
         }
       });
     });
 
-    // 렌더링 업데이트를 위한 상태
-    let animationFrameId: number;
-    const updatePositions = () => {
-      // 강제 리렌더링을 통해 도형 위치 업데이트
-      setOpenedGifts(prev => new Set(prev));
-      animationFrameId = requestAnimationFrame(updatePositions);
-    };
+    // 컨베이어 벨트 생성
+    const conveyor = Matter.Bodies.rectangle(
+      windowDimensions.width / 2,
+      targetYRef.current,
+      windowDimensions.width + 2000,
+      20,
+      { 
+        isStatic: true,
+        render: { visible: false },
+        friction: 0.05,
+        label: 'conveyor'
+      }
+    );
 
-    // 엔진 실행
+    const conveyorSensor = Matter.Bodies.rectangle(
+      windowDimensions.width / 2,
+      targetYRef.current - 20,
+      windowDimensions.width + 2000,
+      40,
+      {
+        isStatic: true,
+        isSensor: true,
+        render: { visible: false },
+        label: 'conveyor-sensor'
+      }
+    );
+    conveyorSensorRef.current = conveyorSensor;
+
+    const entryGuide = Matter.Bodies.rectangle(
+      -300,
+      targetYRef.current - 80,
+      600,
+      10,
+      {
+        isStatic: true,
+        render: { visible: false },
+        friction: 0.02,
+        label: 'entry-guide',
+        angle: Math.PI * 0.08
+      }
+    );
+
+    Matter.World.add(engine.world, [conveyor, conveyorSensor, entryGuide]);
+
     const runner = Matter.Runner.create();
     Matter.Runner.run(runner, engine);
     Matter.Render.run(render);
 
-    // 애니메이션 시작
-    updatePositions();
-
-    // 선물 생성 시작
-    const createGift = () => {
-      createPhysicsBody();
-      setTimeout(createGift, 2000);
-    };
-    
-    createGift();
+    // 첫 선물 생성
+    console.log('Starting gift creation...');
+    setTimeout(() => {
+      createGift();
+    }, 1000);
 
     return () => {
-      // 이벤트 리스너 제거
-      render.canvas.removeEventListener('mousedown', handleMouseDown);
-      render.canvas.removeEventListener('mousemove', handleMouseMove);
-      render.canvas.removeEventListener('mouseup', handleMouseUp);
-
-      // 애니메이션 정리
-      cancelAnimationFrame(animationFrameId);
-
-      // Matter.js 정리
+      console.log('Cleaning up engine...');
+      if (giftTimerRef.current) {
+        clearTimeout(giftTimerRef.current);
+      }
+      Matter.Events.off(engine, 'beforeUpdate');
+      Matter.Events.off(mouseConstraint, 'mousedown');
+      Matter.Events.off(mouseConstraint, 'mousemove');
+      Matter.Events.off(mouseConstraint, 'mouseup');
       Matter.Runner.stop(runner);
       Matter.Render.stop(render);
       Matter.World.clear(engine.world, false);
       Matter.Engine.clear(engine);
+      engineRef.current = null;
       render.canvas.remove();
     };
-  }, []);
+  }, [windowDimensions.width, windowDimensions.height]);
+
+  // Matter.js 업데이트 이벤트 수정
+  useEffect(() => {
+    if (!engineRef.current) return;
+
+    const updateGifts = () => {
+      setGifts(giftBodiesRef.current.filter(gift => 
+        gift.body && 
+        gift.body.position.x <= windowDimensions.width + 100 && 
+        gift.body.position.y <= windowDimensions.height + 100
+      ));
+    };
+
+    const interval = setInterval(updateGifts, 1000 / 60); // 60fps로 업데이트
+
+    return () => clearInterval(interval);
+  }, [windowDimensions]);
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* 컨베이어 벨트를 먼저 렌더링하여 하단 레이어에 위치 */}
-      <div className="absolute bottom-40 left-0 right-0 h-20 bg-gray-300 pointer-events-none z-0">
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gray-400" />
-        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-400" />
+      {/* 컨베이어 벨트 */}
+      <div 
+        className="absolute w-full pointer-events-none"
+        style={{
+          bottom: '0',
+          height: '180px',
+          zIndex: 1,
+          backgroundColor: '#2A2A2A',
+          overflow: 'hidden'
+        }}
+      >
+        <div className="absolute top-0 left-0 right-0 h-2 bg-[#222222]" />
+        <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#222222]" />
+
+        {/* 패턴 애니메이션 */}
         <motion.div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 10px)'
-          }}
-          animate={{ x: [-20, 0] }}
+          className="absolute inset-0"
+          initial={{ x: -180 }}
+          animate={{ x: 0 }}
           transition={{
-            duration: 1,
+            duration: 2,
             ease: "linear",
-            repeat: Infinity
+            repeat: Infinity,
+            repeatType: "loop",
+            repeatDelay: 0
           }}
-        />
+        >
+          <ConveyorPattern />
+        </motion.div>
       </div>
-      
-      {/* Matter.js 캔버스를 상단 레이어에 위치 */}
-      <div ref={sceneRef} className="absolute inset-0 z-10" />
+
+      {/* Matter.js 캔버스 */}
+      <div 
+        ref={sceneRef} 
+        className="absolute inset-0" 
+        style={{ zIndex: 2 }} 
+        onClick={(e) => {
+          const mousePosition = {
+            x: e.clientX,
+            y: e.clientY
+          };
+          
+          const bodies = Matter.Query.point(
+            Matter.Composite.allBodies(engineRef.current!.world),
+            mousePosition
+          );
+          
+          const clickedGift = bodies.find(body => body.label?.startsWith('gift-'));
+          if (clickedGift && !isDragging) {
+            const giftId = parseInt(clickedGift.label.split('-')[1]);
+            const gift = giftBodiesRef.current.find(g => g.id === giftId);
+            
+            if (gift && !openedGifts.has(giftId)) {
+              // 선물상자 열기
+              setOpenedGifts(prev => new Set([...prev, giftId]));
+              setSurprises(prev => new Map(prev).set(giftId, gift.surprise));
+              
+              // 선물상자 제거 및 서프라이즈 아이템 생성
+              Matter.World.remove(engineRef.current!.world, clickedGift);
+              
+              const surpriseBody = Matter.Bodies.circle(
+                clickedGift.position.x,
+                clickedGift.position.y,
+                24,
+                {
+                  label: `emoji-${giftId}`,
+                  restitution: 0.8,
+                  friction: 0.1,
+                  frictionAir: 0.01,
+                  mass: 1,
+                  collisionFilter: {
+                    category: 0x0002
+                  }
+                }
+              );
+              
+              Matter.Body.setVelocity(surpriseBody, { 
+                x: (Math.random() - 0.5) * 10,
+                y: -20
+              });
+              Matter.World.add(engineRef.current!.world, surpriseBody);
+            }
+          }
+        }}
+      />
+
+      {/* 선물상자 SVG 렌더링 */}
+      <div 
+        className="absolute inset-0 pointer-events-none" 
+        style={{ 
+          zIndex: 3
+        }}
+      >
+        {gifts.map(gift => {
+          if (!gift.body || openedGifts.has(gift.id)) return null;
+
+          return (
+            <motion.div
+              key={gift.id}
+              className="absolute"
+              style={{
+                transform: `translate3d(${gift.body.position.x - gift.width/2}px, ${gift.body.position.y - gift.height/2}px, 0) rotate(${gift.body.angle}rad)`,
+                width: gift.width,
+                height: gift.height,
+                transformOrigin: 'center',
+                willChange: 'transform'
+              }}
+            >
+              <img 
+                src={`/giftboxes/box${gift.boxIndex}.svg`}
+                alt="Gift Box"
+                className="w-full h-full object-contain"
+                draggable={false}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
 
       {/* 열린 선물 도형 표시 */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {Array.from(openedGifts).map(giftId => {
           const engine = engineRef.current;
           if (!engine) return null;
@@ -449,13 +551,19 @@ const ConveyorBelt = () => {
           return (
             <motion.div
               key={giftId}
-              className="absolute pointer-events-none"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute"
               style={{
-                transform: `translate3d(${shapeBody.position.x}px, ${shapeBody.position.y}px, 0) rotate(${shapeBody.angle}rad)`,
+                transform: `translate3d(${shapeBody.position.x - (shapeSize * 8)}px, ${shapeBody.position.y - (shapeSize * 8)}px, 0) rotate(${shapeBody.angle}rad)`,
                 width: shapeSize * 16,
                 height: shapeSize * 16,
                 transformOrigin: 'center',
-                willChange: 'transform'
+                willChange: 'transform',
+                zIndex: 4,
+                pointerEvents: 'none'
               }}
             >
               <ShapeRenderer
