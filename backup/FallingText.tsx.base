@@ -85,94 +85,207 @@ const FallingText = () => {
     const newFont = ALL_FONTS[Math.floor(Math.random() * ALL_FONTS.length)];
     const newSize = getRandomSize();
 
-    // 상태 업데이트
+    if (!engineRef.current || !bodiesRef.current[index]) return;
+
+    const clickedBody = bodiesRef.current[index];
+    const currentPos = clickedBody.position;
+    const originalWidth = textSizes[index].width;
+    const originalHeight = textSizes[index].height;
+    const currentAngle = clickedBody.angle;
+
+    // 팽창 애니메이션
+    const expandDuration = 100; // 100ms
+    const shrinkDuration = 200; // 200ms
+    const maxScale = 1.05; // 5% 더 크게
+    const startTime = Date.now();
+
+    // 상태 업데이트 (폰트 변경은 애니메이션 완료 후에 적용)
     setFonts(prev => {
       const next = [...prev];
-      next[index] = newFont;
+      next[index] = prev[index];
       return next;
     });
     setFontSizes(prev => {
       const next = [...prev];
-      next[index] = newSize;
+      next[index] = fontSizes[index];
       return next;
     });
 
-    // 폰트 로딩 대기
-    const fontName = newFont.split(',')[0].replace(/['"]/g, '');
-    await document.fonts.load(`bold ${BASE_FONT_SIZE} ${fontName}`);
+    const expandAnimation = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / expandDuration, 1);
+      // easeOutQuad 애니메이션 커브 적용
+      const eased = 1 - (1 - progress) * (1 - progress);
+      const scale = 1 + (maxScale - 1) * eased;
 
-    // 크기 재측정
-    if (!measureRef.current) return;
+      if (engineRef.current && bodiesRef.current[index]) {
+        const body = bodiesRef.current[index];
+        
+        // 와본 크기 기준으로 새로운 바디 생성 (회전 전)
+        const newBody = Matter.Bodies.rectangle(
+          body.position.x,
+          body.position.y,
+          originalWidth * scale,
+          originalHeight * scale,
+          {
+            friction: body.friction,
+            restitution: body.restitution,
+            render: body.render,
+            angle: currentAngle // 현재 각도 유지
+          }
+        );
 
-    const div = document.createElement('div');
-    const fontSize = `calc(${BASE_FONT_SIZE} * ${newSize})`;
-    div.style.cssText = `
-      position: absolute;
-      visibility: hidden;
-      font-size: ${fontSize};
-      font-weight: bold;
-      white-space: nowrap;
-      font-family: ${newFont};
-      letter-spacing: -0.02em;
-      padding: 0;
-      margin: 0;
-      border: 0;
-    `;
-    const allWords = [...secondLine, ...firstLine];
-    div.textContent = allWords[index].text;
-    
-    document.body.appendChild(div);
-    const rect = div.getBoundingClientRect();
-    document.body.removeChild(div);
-    
-    const newSize2D = {
-      width: Math.ceil(rect.width) + 20,
-      height: Math.ceil(rect.height) + 16
+        // 현재 상태 복사
+        Matter.Body.setVelocity(newBody, body.velocity);
+        Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+        // 바디 교체
+        Matter.World.remove(engineRef.current.world, body);
+        Matter.World.add(engineRef.current.world, newBody);
+        bodiesRef.current[index] = newBody;
+
+        // 텍스트 크기 업데이트
+        setFontSizes(prev => {
+          const next = [...prev];
+          next[index] = fontSizes[index] * scale;
+          return next;
+        });
+        
+        if (progress < 1) {
+          requestAnimationFrame(expandAnimation);
+        } else {
+          // 축소 애니메이션 시작
+          const shrinkStartTime = Date.now();
+          const shrinkAnimation = () => {
+            const shrinkElapsed = Date.now() - shrinkStartTime;
+            const shrinkProgress = Math.min(shrinkElapsed / shrinkDuration, 1);
+            // easeInOutQuad 애니메이션 커브 적용
+            const eased = shrinkProgress < 0.5
+              ? 2 * shrinkProgress * shrinkProgress
+              : 1 - Math.pow(-2 * shrinkProgress + 2, 2) / 2;
+            const currentScale = maxScale - (maxScale - 1) * eased;
+
+            if (engineRef.current && bodiesRef.current[index]) {
+              const body = bodiesRef.current[index];
+
+              // 원본 크기 기준으로 새로운 바디 생성 (회전 전)
+              const newBody = Matter.Bodies.rectangle(
+                body.position.x,
+                body.position.y,
+                originalWidth * currentScale,
+                originalHeight * currentScale,
+                {
+                  friction: body.friction,
+                  restitution: body.restitution,
+                  render: body.render,
+                  angle: currentAngle // 현재 각도 유지
+                }
+              );
+
+              // 현재 상태 복사
+              Matter.Body.setVelocity(newBody, body.velocity);
+              Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+              // 바디 교체
+              Matter.World.remove(engineRef.current.world, body);
+              Matter.World.add(engineRef.current.world, newBody);
+              bodiesRef.current[index] = newBody;
+
+              // 텍스트 크기 업데이트
+              setFontSizes(prev => {
+                const next = [...prev];
+                next[index] = fontSizes[index] * currentScale;
+                return next;
+              });
+
+              if (shrinkProgress < 1) {
+                requestAnimationFrame(shrinkAnimation);
+              } else {
+                // 애니메이션 완료 후 최종 폰트와 크기로 변경
+                setFonts(prev => {
+                  const next = [...prev];
+                  next[index] = newFont;
+                  return next;
+                });
+                setFontSizes(prev => {
+                  const next = [...prev];
+                  next[index] = newSize;
+                  return next;
+                });
+                updateBodyWithNewFont();
+              }
+            }
+          };
+          requestAnimationFrame(shrinkAnimation);
+        }
+      }
     };
 
-    // 물리 엔진 바디 크기 업데이트
-    if (engineRef.current && bodiesRef.current[index]) {
-      const body = bodiesRef.current[index];
-      const currentPos = { ...body.position };
-      const currentVel = { ...body.velocity };
-      const currentAngle = body.angle;
-      const currentAngularVel = body.angularVelocity;
+    requestAnimationFrame(expandAnimation);
 
-      // 새 크기의 바디 생성
-      const newBody = Matter.Bodies.rectangle(
-        currentPos.x,
-        currentPos.y,
-        newSize2D.width,
-        newSize2D.height,
-        {
-          friction: 0.3,
-          restitution: 0.6,
-          render: {
-            fillStyle: 'transparent',
-            strokeStyle: '#000',
-            lineWidth: 1
-          }
+    // 주변 단어들에 힘 가하기
+    bodiesRef.current.forEach((body, i) => {
+      if (i !== index) {
+        const distance = Matter.Vector.magnitude(Matter.Vector.sub(body.position, currentPos));
+        if (distance < 100) { // 100px 반경으로 줄임
+          const force = Matter.Vector.mult(
+            Matter.Vector.normalise(Matter.Vector.sub(body.position, currentPos)),
+            0.01 * (100 - distance) // 힘도 약하게 조정
+          );
+          Matter.Body.applyForce(body, currentPos, force);
         }
-      );
-
-      // 이전 상태 복원
-      Matter.Body.setPosition(newBody, currentPos);
-      Matter.Body.setVelocity(newBody, currentVel);
-      Matter.Body.setAngle(newBody, currentAngle);
-      Matter.Body.setAngularVelocity(newBody, currentAngularVel);
-
-      // 바디 교체
-      Matter.World.remove(engineRef.current.world, body);
-      Matter.World.add(engineRef.current.world, newBody);
-      bodiesRef.current[index] = newBody;
-    }
-
-    // 크기 상태 업데이트
-    setTextSizes(prev => {
-      const next = [...prev];
-      next[index] = newSize2D;
-      return next;
+      }
     });
+
+    // 폰트 로딩 및 크기 측정
+    const updateBodyWithNewFont = async () => {
+      const fontName = newFont.split(',')[0].replace(/['"]/g, '');
+      await document.fonts.load(`bold ${BASE_FONT_SIZE} ${fontName}`);
+
+      if (!measureRef.current || !engineRef.current || !bodiesRef.current[index]) return;
+
+      const div = document.createElement('div');
+      const fontSize = `calc(${BASE_FONT_SIZE} * ${newSize})`;
+      div.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        font-size: ${fontSize};
+        font-weight: bold;
+        white-space: nowrap;
+        font-family: ${newFont};
+        letter-spacing: -0.02em;
+        padding: 0;
+        margin: 0;
+        border: 0;
+      `;
+      const allWords = [...secondLine, ...firstLine];
+      div.textContent = allWords[index].text;
+      
+      document.body.appendChild(div);
+      const rect = div.getBoundingClientRect();
+      document.body.removeChild(div);
+      
+      const newSize2D = {
+        width: Math.ceil(rect.width) + 20,
+        height: Math.ceil(rect.height) + 16
+      };
+
+      // 크기 상태 업데이트
+      setTextSizes(prev => {
+        const next = [...prev];
+        next[index] = newSize2D;
+        return next;
+      });
+
+      // 최종 크기로 바디 업데이트
+      const body = bodiesRef.current[index];
+      const currentWidth = body.bounds.max.x - body.bounds.min.x;
+      const currentHeight = body.bounds.max.y - body.bounds.min.y;
+      const scaleX = newSize2D.width / currentWidth;
+      const scaleY = newSize2D.height / currentHeight;
+
+      Matter.Body.scale(body, scaleX, scaleY);
+    };
   };
 
   // 텍스트 크기 측정
@@ -271,9 +384,10 @@ const FallingText = () => {
         window.innerWidth / 2,
         window.innerHeight,
         window.innerWidth,
-        60,
+        60, // 원래 두께로 복원
         { 
           isStatic: true,
+          restitution: 0.3,
           render: {
             fillStyle: 'transparent',
             strokeStyle: '#000',
@@ -282,12 +396,13 @@ const FallingText = () => {
         }
       ),
       Matter.Bodies.rectangle(
-        0,
+        0, // 원래 위치로 복원
         window.innerHeight / 2,
-        60,
+        60, // 원래 두께로 복원
         window.innerHeight,
         { 
           isStatic: true,
+          restitution: 0.3,
           render: {
             fillStyle: 'transparent',
             strokeStyle: '#000',
@@ -296,12 +411,13 @@ const FallingText = () => {
         }
       ),
       Matter.Bodies.rectangle(
-        window.innerWidth,
+        window.innerWidth, // 원래 위치로 복원
         window.innerHeight / 2,
-        60,
+        60, // 원래 두께로 복원
         window.innerHeight,
         { 
           isStatic: true,
+          restitution: 0.3,
           render: {
             fillStyle: 'transparent',
             strokeStyle: '#000',
@@ -326,7 +442,7 @@ const FallingText = () => {
         size.height,
         {
           friction: 0.3,
-          restitution: 0.6,
+          restitution: 0.4,
           angle: (Math.random() - 0.5) * 0.2,
           render: {
             fillStyle: 'transparent',
