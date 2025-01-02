@@ -53,7 +53,20 @@ const getRandomSize = () => {
   return 0.9 + (Math.random() * 0.3); // 0.9 ~ 1.2
 };
 
-const BASE_FONT_SIZE = '7rem';
+// 기본 폰트 크기 설정 (반응형)
+const getBaseFontSize = () => {
+  if (typeof window === 'undefined') return '7rem';
+  return window.innerWidth < 768 ? '4rem' : '7rem';
+};
+
+const BASE_FONT_SIZE = getBaseFontSize();
+
+// 텍스트 크기가 화면 너비를 초과하는지 확인
+const adjustTextSize = (size: number, width: number) => {
+  if (typeof window === 'undefined') return size;
+  const maxWidth = window.innerWidth * 0.9; // 화면 너비의 90%를 최대 너비로 설정
+  return width > maxWidth ? (maxWidth / width) * size : size;
+};
 
 const firstLine = [
   { text: "DESIGNS", x: 0.15 },
@@ -78,6 +91,8 @@ const FallingText = () => {
   const [textSizes, setTextSizes] = useState<Array<{width: number; height: number}>>([]);
   const [fonts, setFonts] = useState(() => getUniqueRandomFonts([...secondLine, ...firstLine].length));
   const [fontSizes, setFontSizes] = useState(() => [...secondLine, ...firstLine].map(() => getRandomSize()));
+  const [orderedWords, setOrderedWords] = useState<typeof firstLine | typeof secondLine>([]);
+  const allWords = [...secondLine, ...firstLine];
 
   // 단어 클릭 핸들러
   const handleWordClick = async (index: number) => {
@@ -305,17 +320,14 @@ const FallingText = () => {
     if (!measureRef.current) return;
 
     const measureText = async () => {
-      // 폰트 로딩 대기
       await document.fonts.ready;
       
       const allWords = [...secondLine, ...firstLine];
       const sizes = await Promise.all(allWords.map(async (word, i) => {
-        // 폰트 로딩 체크
         const fontName = fonts[i].split(',')[0].replace(/['"]/g, '');
         const isFontLoaded = document.fonts.check(`bold ${BASE_FONT_SIZE} ${fontName}`);
         console.log(`Font ${fontName} loaded:`, isFontLoaded);
 
-        // 측정용 div 생성
         const div = document.createElement('div');
         const fontSize = `calc(${BASE_FONT_SIZE} * ${fontSizes[i]})`;
         div.style.cssText = `
@@ -334,26 +346,45 @@ const FallingText = () => {
         
         document.body.appendChild(div);
         
-        // 폰트 로딩 완료 대기
         if (!isFontLoaded) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         const rect = div.getBoundingClientRect();
-        const size = {
-          width: Math.ceil(rect.width) + 20,
-          height: Math.ceil(rect.height) + 16
+        const width = Math.ceil(rect.width) + 20;
+        const height = Math.ceil(rect.height) + 16;
+        
+        // 텍스트 크기가 화면을 벗어나는 경우 크기 조정
+        const adjustedSize = {
+          width: width,
+          height: height
         };
         
-        document.body.removeChild(div);
-        console.log(`Measured "${word.text}" with font ${fontName}:`, size);
+        const adjustedFontSize = adjustTextSize(fontSizes[i], width);
+        if (adjustedFontSize !== fontSizes[i]) {
+          // 크기가 조정된 경우 다시 측정
+          div.style.fontSize = `calc(${BASE_FONT_SIZE} * ${adjustedFontSize})`;
+          const newRect = div.getBoundingClientRect();
+          adjustedSize.width = Math.ceil(newRect.width) + 20;
+          adjustedSize.height = Math.ceil(newRect.height) + 16;
+          
+          // 폰트 크기 업데이트
+          setFontSizes(prev => {
+            const next = [...prev];
+            next[i] = adjustedFontSize;
+            return next;
+          });
+        }
         
-        return size;
+        document.body.removeChild(div);
+        console.log(`Measured "${word.text}" with font ${fontName}:`, adjustedSize);
+        
+        return adjustedSize;
       }));
 
       console.log('All text sizes measured:', sizes);
       setTextSizes(sizes);
-      setIsReady(true); // 측정 완료 후 ready 상태 설정
+      setIsReady(true);
     };
 
     measureText();
@@ -396,7 +427,7 @@ const FallingText = () => {
         window.innerWidth / 2,
         window.innerHeight,
         window.innerWidth,
-        60, // 원래 두께로 복원
+        60,
         { 
           isStatic: true,
           restitution: 0.3,
@@ -408,9 +439,9 @@ const FallingText = () => {
         }
       ),
       Matter.Bodies.rectangle(
-        0, // 원래 위치로 복원
+        0,
         window.innerHeight / 2,
-        60, // 원래 두께로 복원
+        60,
         window.innerHeight,
         { 
           isStatic: true,
@@ -423,9 +454,9 @@ const FallingText = () => {
         }
       ),
       Matter.Bodies.rectangle(
-        window.innerWidth, // 원래 위치로 복원
+        window.innerWidth,
         window.innerHeight / 2,
-        60, // 원래 두께로 복원
+        60,
         window.innerHeight,
         { 
           isStatic: true,
@@ -441,15 +472,40 @@ const FallingText = () => {
 
     Matter.World.add(engine.world, walls);
 
-    // 텍스트 물리 객체 생성
-    const allWords = [...secondLine, ...firstLine];
-    bodiesRef.current = allWords.map((word, i) => {
-      const size = textSizes[i];
-      const isSecondLine = i < secondLine.length;
+    // 모바일 여부 확인
+    const isMobile = window.innerWidth < 768;
+    
+    // 모바일에서는 문장 순서대로 역순 정렬
+    const words = isMobile 
+      ? ["DESIGNS", "WRAPPED", "IN", "CREATIVITY", "DELIVERED", "WITH", "CARE"].reverse().map(text => 
+          allWords.find(word => word.text === text)!
+        )
+      : allWords;
+    
+    setOrderedWords(words);
+
+    // 순서에 맞는 크기와 폰트 매핑
+    const orderedSizes = words.map(word => 
+      textSizes[allWords.findIndex(w => w.text === word.text)]
+    );
+    
+    bodiesRef.current = words.map((word, i) => {
+      const size = orderedSizes[i];
+      const isSecondLine = isMobile ? i >= 4 : i < secondLine.length;
+      
+      // 모바일에서는 항상 중앙에서 떨어지도록 x 좌표 설정
+      const xPosition = isMobile 
+        ? window.innerWidth / 2 
+        : word.x * window.innerWidth;
+
+      // 모바일에서는 순서대로 높이 설정
+      const yPosition = isMobile
+        ? -100 - (i * 200)
+        : (isSecondLine ? -100 : -300);
       
       return Matter.Bodies.rectangle(
-        word.x * window.innerWidth,
-        isSecondLine ? -100 : -300,
+        xPosition,
+        yPosition,
         size.width,
         size.height,
         {
@@ -474,12 +530,14 @@ const FallingText = () => {
           Matter.World.add(engine.world, [bodiesRef.current[currentIndex]]);
           currentIndex++;
           
-          const delay = currentIndex === secondLine.length ? 1000 : 300;
+          // 모바일에서는 더 긴 간격으로 추가
+          const delay = isMobile ? 400 : (currentIndex === secondLine.length ? 1000 : 300);
           setTimeout(addNextWord, delay);
         }
       };
       
-      setTimeout(addNextWord, 500);
+      // 모바일에서는 시작 딜레이를 더 길게
+      setTimeout(addNextWord, isMobile ? 1000 : 500);
     };
 
     addWordsSequentially();
@@ -508,7 +566,7 @@ const FallingText = () => {
       Matter.Engine.clear(engine);
       render.canvas.remove();
     };
-  }, [isReady]); // isReady 상태에 의존
+  }, [isReady]);
 
   return (
     <div className="fixed inset-0 bg-white">
@@ -522,23 +580,25 @@ const FallingText = () => {
       {/* 텍스트 레이어 */}
       <div className="fixed inset-0" style={{ zIndex: 2, mixBlendMode: 'multiply' }}>
         {positions.map((pos, i) => {
-          const allWords = [...secondLine, ...firstLine];
+          if (!orderedWords[i]) return null;
+          const word = orderedWords[i];
+          const originalIndex = allWords.findIndex(w => w.text === word.text);
           return (
             <div
               key={i}
               className="absolute font-bold text-black cursor-pointer"
-              onClick={() => handleWordClick(i)}
+              onClick={() => handleWordClick(originalIndex)}
               style={{
                 left: `${pos.x}px`,
                 top: `${pos.y}px`,
                 transform: `translate(-50%, -50%) rotate(${pos.angle}rad)`,
                 mixBlendMode: 'multiply',
-                fontSize: `calc(${BASE_FONT_SIZE} * ${fontSizes[i]})`,
-                fontFamily: fonts[i],
+                fontSize: `calc(${BASE_FONT_SIZE} * ${fontSizes[originalIndex]})`,
+                fontFamily: fonts[originalIndex],
                 transition: 'font-size 0.3s'
               }}
             >
-              {allWords[i].text}
+              {word.text}
             </div>
           );
         })}
