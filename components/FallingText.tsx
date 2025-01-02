@@ -82,7 +82,10 @@ const secondLine = [
 ];
 
 // SVG 그래픽 파일 목록
-const GRAPHICS = Array.from({ length: 20 }, (_, i) => `/web_portfolio/assets/graphics/graphics${i + 1}.svg`);
+const GRAPHICS = Array.from(
+  { length: 20 }, 
+  (_, i) => `${process.env.NODE_ENV === 'production' ? '/web_portfolio' : ''}/assets/graphics/graphics${i + 1}.svg`
+);
 
 // 그래픽 기본 크기 설정
 const GRAPHIC_BASE_SIZE = 150;
@@ -516,13 +519,17 @@ const FallingText = () => {
     const handleCanvasClick = (e: MouseEvent) => {
       if (isHandlingClick) return;
       
-      // 클릭한 위치에 텍스트가 있는지 확인
+      // 클릭한 위치에 텍스트나 그래픽이 있는지 확인
       const clickX = e.clientX;
       const clickY = e.clientY;
       const clickedBody = Matter.Query.point(bodiesRef.current, { x: clickX, y: clickY })[0];
       
-      // 텍스트가 있는 위치를 클릭한 경우 무시
+      // 텍스트나 그래픽이 있는 위치를 클릭한 경우 무시
       if (clickedBody) return;
+
+      // 그래픽 요소를 클릭했는지 확인
+      const clickedElement = (e.target as HTMLElement);
+      if (clickedElement.tagName === 'IMG') return;
       
       isHandlingClick = true;
 
@@ -782,6 +789,65 @@ const FallingText = () => {
   return (
     <div 
       className="fixed inset-0 bg-white"
+      onClick={(e) => {
+        // 클릭한 요소가 텍스트나 그래픽이 아닌 경우에만 처리
+        const clickedElement = e.target as HTMLElement;
+        if (clickedElement.tagName === 'IMG' || clickedElement.classList.contains('text-element')) return;
+        
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+        
+        // 랜덤한 그래픽 선택
+        const randomGraphic = GRAPHICS[Math.floor(Math.random() * GRAPHICS.length)];
+        
+        // 이미지 크기 측정을 위한 임시 이미지 생성
+        const img = new Image();
+        img.src = randomGraphic;
+        
+        img.onload = () => {
+          // 이미지 크기 계산
+          const { width, height } = calculateImageSize(img.width, img.height);
+
+          // 랜덤 각도 생성
+          const angle = (Math.random() - 0.5) * 0.2;
+
+          // 초기 바디 생성
+          const initialBody = Matter.Bodies.rectangle(
+            clickX,
+            clickY,
+            width + 20,
+            height + 20,
+            {
+              friction: 0.3,
+              restitution: 0.4,
+              angle: angle,
+              render: {
+                fillStyle: 'transparent',
+                strokeStyle: '#000',
+                lineWidth: 1
+              },
+              collisionFilter: {
+                group: 0,
+                category: 0x0002,
+                mask: 0x0001 | 0x0002 | 0x0004
+              }
+            }
+          );
+
+          Matter.World.add(engineRef.current!.world, [initialBody]);
+          bodiesRef.current.push(initialBody);
+
+          // 그래픽 상태 업데이트
+          setGraphics(prev => [...prev, {
+            src: randomGraphic,
+            x: clickX,
+            y: clickY,
+            width: width,
+            height: height,
+            angle: angle
+          }]);
+        };
+      }}
     >
       <div ref={measureRef} className="absolute top-0 left-0 opacity-0 pointer-events-none" />
       
@@ -790,10 +856,10 @@ const FallingText = () => {
         {/* 물리 엔진 캔버스가 여기에 렌더링됨 */}
       </div>
 
-      {/* 텍스트 레이어 */}
+      {/* 텍스트와 그래픽 레이어 */}
       <div 
-        className="fixed inset-0 pointer-events-none" 
-        style={{ zIndex: 2 }}
+        className="fixed inset-0" 
+        style={{ zIndex: 10 }}
       >
         {positions.map((pos, i) => {
           if (!orderedWords[i]) return null;
@@ -802,7 +868,7 @@ const FallingText = () => {
           return (
             <div
               key={i}
-              className="absolute font-bold text-black cursor-pointer pointer-events-auto"
+              className="absolute font-bold text-black cursor-pointer pointer-events-auto text-element"
               onClick={(e) => {
                 e.stopPropagation();
                 handleWordClick(originalIndex);
@@ -830,7 +896,127 @@ const FallingText = () => {
             key={`graphic-${i}`}
             src={graphic.src}
             alt=""
-            className="absolute pointer-events-none"
+            className="absolute cursor-pointer pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              
+              // 현재와 다른 랜덤 그래픽 선택
+              let newGraphic;
+              do {
+                newGraphic = GRAPHICS[Math.floor(Math.random() * GRAPHICS.length)];
+              } while (newGraphic === graphic.src);
+
+              // 새로운 랜덤 크기 계산
+              const img = new Image();
+              img.src = newGraphic;
+              
+              img.onload = () => {
+                const { width, height } = calculateImageSize(img.width, img.height);
+                const body = bodiesRef.current[orderedWords.length + i];
+                const currentAngle = body.angle;
+                const currentPos = body.position;
+
+                // 팽창 애니메이션
+                const expandDuration = 100;
+                const shrinkDuration = 200;
+                const maxScale = 1.1;
+                const startTime = Date.now();
+
+                const createScaledBody = (position: Matter.Vector, scale: number) => {
+                  return Matter.Bodies.rectangle(
+                    position.x,
+                    position.y,
+                    (width + 20) * scale,
+                    (height + 20) * scale,
+                    {
+                      friction: 0.3,
+                      restitution: 0.4,
+                      angle: currentAngle,
+                      render: {
+                        fillStyle: 'transparent',
+                        strokeStyle: '#000',
+                        lineWidth: 1
+                      },
+                      collisionFilter: {
+                        group: 0,
+                        category: 0x0002,
+                        mask: 0x0001 | 0x0002 | 0x0004
+                      }
+                    }
+                  );
+                };
+
+                const expandAnimation = () => {
+                  const elapsed = Date.now() - startTime;
+                  const progress = Math.min(elapsed / expandDuration, 1);
+                  const eased = 1 - (1 - progress) * (1 - progress);
+                  const currentScale = 1 + (maxScale - 1) * eased;
+
+                  const body = bodiesRef.current[orderedWords.length + i];
+                  const newBody = createScaledBody(body.position, currentScale);
+
+                  Matter.Body.setVelocity(newBody, body.velocity);
+                  Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+                  Matter.World.remove(engineRef.current!.world, body);
+                  Matter.World.add(engineRef.current!.world, newBody);
+                  bodiesRef.current[orderedWords.length + i] = newBody;
+
+                  setGraphics(prev => {
+                    const next = [...prev];
+                    next[i] = {
+                      ...next[i],
+                      width: width * currentScale,
+                      height: height * currentScale,
+                      src: newGraphic
+                    };
+                    return next;
+                  });
+
+                  if (progress < 1) {
+                    requestAnimationFrame(expandAnimation);
+                  } else {
+                    // 축소 애니메이션 시작
+                    const shrinkStartTime = Date.now();
+                    const shrinkAnimation = () => {
+                      const shrinkElapsed = Date.now() - shrinkStartTime;
+                      const shrinkProgress = Math.min(shrinkElapsed / shrinkDuration, 1);
+                      const eased = shrinkProgress < 0.5
+                        ? 2 * shrinkProgress * shrinkProgress
+                        : 1 - Math.pow(-2 * shrinkProgress + 2, 2) / 2;
+                      const currentScale = maxScale - (maxScale - 1) * eased;
+
+                      const body = bodiesRef.current[orderedWords.length + i];
+                      const newBody = createScaledBody(body.position, currentScale);
+
+                      Matter.Body.setVelocity(newBody, body.velocity);
+                      Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+                      Matter.World.remove(engineRef.current!.world, body);
+                      Matter.World.add(engineRef.current!.world, newBody);
+                      bodiesRef.current[orderedWords.length + i] = newBody;
+
+                      setGraphics(prev => {
+                        const next = [...prev];
+                        next[i] = {
+                          ...next[i],
+                          width: width * currentScale,
+                          height: height * currentScale
+                        };
+                        return next;
+                      });
+
+                      if (shrinkProgress < 1) {
+                        requestAnimationFrame(shrinkAnimation);
+                      }
+                    };
+                    requestAnimationFrame(shrinkAnimation);
+                  }
+                };
+
+                requestAnimationFrame(expandAnimation);
+              };
+            }}
             style={{
               left: `${graphic.x}px`,
               top: `${graphic.y}px`,

@@ -830,7 +830,25 @@ const FallingText = () => {
             key={`graphic-${i}`}
             src={graphic.src}
             alt=""
-            className="absolute pointer-events-none"
+            className="absolute cursor-pointer pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              // 현재와 다른 랜덤 그래픽 선택
+              let newGraphic;
+              do {
+                newGraphic = GRAPHICS[Math.floor(Math.random() * GRAPHICS.length)];
+              } while (newGraphic === graphic.src);
+              
+              // 이미지 업데이트
+              setGraphics(prev => {
+                const next = [...prev];
+                next[i] = {
+                  ...next[i],
+                  src: newGraphic
+                };
+                return next;
+              });
+            }}
             style={{
               left: `${graphic.x}px`,
               top: `${graphic.y}px`,
