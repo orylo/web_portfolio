@@ -81,6 +81,24 @@ const secondLine = [
   { text: "CARE", x: 0.8 }
 ];
 
+// SVG 그래픽 파일 목록
+const GRAPHICS = Array.from({ length: 20 }, (_, i) => `/assets/graphics/graphics${i + 1}.svg`);
+
+// 그래픽 기본 크기 설정
+const GRAPHIC_BASE_SIZE = 150;
+
+// 이미지 크기 계산 함수
+const calculateImageSize = (originalWidth: number, originalHeight: number) => {
+  const scale = Math.min(GRAPHIC_BASE_SIZE / originalWidth, GRAPHIC_BASE_SIZE / originalHeight);
+  const baseWidth = Math.ceil(originalWidth * scale);
+  const baseHeight = Math.ceil(originalHeight * scale);
+  const randomScale = getRandomSize();
+  return {
+    width: Math.ceil(baseWidth * randomScale),
+    height: Math.ceil(baseHeight * randomScale)
+  };
+};
+
 const FallingText = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -91,8 +109,24 @@ const FallingText = () => {
   const [textSizes, setTextSizes] = useState<Array<{width: number; height: number}>>([]);
   const [fonts, setFonts] = useState(() => getUniqueRandomFonts([...secondLine, ...firstLine].length));
   const [fontSizes, setFontSizes] = useState(() => [...secondLine, ...firstLine].map(() => getRandomSize()));
-  const [orderedWords, setOrderedWords] = useState<typeof firstLine | typeof secondLine>([]);
   const allWords = [...secondLine, ...firstLine];
+  // 초기값 설정
+  const [orderedWords, setOrderedWords] = useState<typeof firstLine | typeof secondLine>(() => {
+    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+    return isMobile 
+      ? ["DESIGNS", "WRAPPED", "IN", "CREATIVITY", "DELIVERED", "WITH", "CARE"].reverse().map(text => 
+          allWords.find(word => word.text === text)!
+        )
+      : allWords;
+  });
+  const [graphics, setGraphics] = useState<Array<{
+    src: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    angle: number;
+  }>>([]);
 
   // 단어 클릭 핸들러
   const handleWordClick = async (index: number) => {
@@ -325,8 +359,7 @@ const FallingText = () => {
       const allWords = [...secondLine, ...firstLine];
       const sizes = await Promise.all(allWords.map(async (word, i) => {
         const fontName = fonts[i].split(',')[0].replace(/['"]/g, '');
-        const isFontLoaded = document.fonts.check(`bold ${BASE_FONT_SIZE} ${fontName}`);
-        console.log(`Font ${fontName} loaded:`, isFontLoaded);
+        await document.fonts.load(`bold ${BASE_FONT_SIZE} ${fontName}`);
 
         const div = document.createElement('div');
         const fontSize = `calc(${BASE_FONT_SIZE} * ${fontSizes[i]})`;
@@ -345,11 +378,6 @@ const FallingText = () => {
         div.textContent = word.text;
         
         document.body.appendChild(div);
-        
-        if (!isFontLoaded) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        
         const rect = div.getBoundingClientRect();
         const width = Math.ceil(rect.width) + 20;
         const height = Math.ceil(rect.height) + 16;
@@ -377,12 +405,9 @@ const FallingText = () => {
         }
         
         document.body.removeChild(div);
-        console.log(`Measured "${word.text}" with font ${fontName}:`, adjustedSize);
-        
         return adjustedSize;
       }));
 
-      console.log('All text sizes measured:', sizes);
       setTextSizes(sizes);
       setIsReady(true);
     };
@@ -393,8 +418,6 @@ const FallingText = () => {
   // 물리 엔진 초기화
   useEffect(() => {
     if (!containerRef.current || !isReady) return;
-
-    console.log('Initializing physics with text sizes:', textSizes);
 
     const engine = Matter.Engine.create({
       enableSleeping: false
@@ -416,8 +439,7 @@ const FallingText = () => {
 
     // @ts-ignore
     render.options.wireframeStrokeStyle = '#000000';
-    render.canvas.style.opacity = '1';
-    render.canvas.style.mixBlendMode = 'multiply';
+    render.canvas.style.opacity = '0.8';
 
     engine.gravity.y = 0.5;
 
@@ -435,6 +457,11 @@ const FallingText = () => {
             fillStyle: 'transparent',
             strokeStyle: '#000',
             lineWidth: 1
+          },
+          collisionFilter: {
+            group: 0,
+            category: 0x0004, // 벽 카테고리
+            mask: 0xFFFFFFFF // 모든 것과 충돌
           }
         }
       ),
@@ -450,6 +477,11 @@ const FallingText = () => {
             fillStyle: 'transparent',
             strokeStyle: '#000',
             lineWidth: 1
+          },
+          collisionFilter: {
+            group: 0,
+            category: 0x0004, // 벽 카테고리
+            mask: 0xFFFFFFFF // 모든 것과 충돌
           }
         }
       ),
@@ -465,6 +497,11 @@ const FallingText = () => {
             fillStyle: 'transparent',
             strokeStyle: '#000',
             lineWidth: 1
+          },
+          collisionFilter: {
+            group: 0,
+            category: 0x0004, // 벽 카테고리
+            mask: 0xFFFFFFFF // 모든 것과 충돌
           }
         }
       )
@@ -472,33 +509,185 @@ const FallingText = () => {
 
     Matter.World.add(engine.world, walls);
 
+    // 클릭 이벤트 중복 방지를 위한 플래그
+    let isHandlingClick = false;
+
+    // 캔버스 클릭 이벤트 리스너
+    const handleCanvasClick = (e: MouseEvent) => {
+      if (isHandlingClick) return;
+      
+      // 클릭한 위치에 텍스트가 있는지 확인
+      const clickX = e.clientX;
+      const clickY = e.clientY;
+      const clickedBody = Matter.Query.point(bodiesRef.current, { x: clickX, y: clickY })[0];
+      
+      // 텍스트가 있는 위치를 클릭한 경우 무시
+      if (clickedBody) return;
+      
+      isHandlingClick = true;
+
+      // 랜덤한 그래픽 선택
+      const randomGraphic = GRAPHICS[Math.floor(Math.random() * GRAPHICS.length)];
+      
+      // 이미지 크기 측정을 위한 임시 이미지 생성
+      const img = new Image();
+      img.src = randomGraphic;
+      
+      img.onload = () => {
+        // 이미지 크기 계산
+        const { width, height } = calculateImageSize(img.width, img.height);
+
+        // 랜덤 각도 생성
+        const angle = (Math.random() - 0.5) * 0.2;
+
+        // 팽창 애니메이션을 위한 설정
+        const expandDuration = 100; // 100ms
+        const shrinkDuration = 200; // 200ms
+        const maxScale = 1.1; // 10% 더 크게
+        const startTime = Date.now();
+
+        const createScaledBody = (position: Matter.Vector, scale: number, angle: number) => {
+          return Matter.Bodies.rectangle(
+            position.x,
+            position.y,
+            (width + 20) * scale,
+            (height + 20) * scale,
+            {
+              friction: 0.3,
+              restitution: 0.4,
+              angle: angle,
+              render: {
+                fillStyle: 'transparent',
+                strokeStyle: '#000',
+                lineWidth: 1
+              },
+              collisionFilter: {
+                group: 0,
+                category: 0x0002,
+                mask: 0x0001 | 0x0002 | 0x0004
+              }
+            }
+          );
+        };
+
+        // 초기 바디 생성
+        const initialBody = createScaledBody({ x: clickX, y: clickY }, 1, angle);
+        Matter.World.add(engineRef.current!.world, [initialBody]);
+        bodiesRef.current.push(initialBody);
+
+        // 그래픽 상태 업데이트
+        setGraphics(prev => [...prev, {
+          src: randomGraphic,
+          x: clickX,
+          y: clickY,
+          width: width,
+          height: height,
+          angle: angle,
+          scale: 1
+        }]);
+
+        // 팽창 애니메이션
+        const expandAnimation = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / expandDuration, 1);
+          // easeOutQuad 애니메이션 커브 적용
+          const eased = 1 - (1 - progress) * (1 - progress);
+          const currentScale = 1 + (maxScale - 1) * eased;
+
+          const body = bodiesRef.current[bodiesRef.current.length - 1];
+          const newBody = createScaledBody(body.position, currentScale, angle);
+
+          // 현재 상태 복사
+          Matter.Body.setVelocity(newBody, body.velocity);
+          Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+          // 바디 교체
+          Matter.World.remove(engineRef.current!.world, body);
+          Matter.World.add(engineRef.current!.world, newBody);
+          bodiesRef.current[bodiesRef.current.length - 1] = newBody;
+
+          // 그래픽 크기 업데이트
+          setGraphics(prev => {
+            const next = [...prev];
+            const lastIndex = next.length - 1;
+            next[lastIndex] = {
+              ...next[lastIndex],
+              width: width * currentScale,
+              height: height * currentScale
+            };
+            return next;
+          });
+
+          if (progress < 1) {
+            requestAnimationFrame(expandAnimation);
+          } else {
+            // 축소 애니메이션 시작
+            const shrinkStartTime = Date.now();
+            const shrinkAnimation = () => {
+              const shrinkElapsed = Date.now() - shrinkStartTime;
+              const shrinkProgress = Math.min(shrinkElapsed / shrinkDuration, 1);
+              // easeInOutQuad 애니메이션 커브 적용
+              const eased = shrinkProgress < 0.5
+                ? 2 * shrinkProgress * shrinkProgress
+                : 1 - Math.pow(-2 * shrinkProgress + 2, 2) / 2;
+              const currentScale = maxScale - (maxScale - 1) * eased;
+
+              const body = bodiesRef.current[bodiesRef.current.length - 1];
+              const newBody = createScaledBody(body.position, currentScale, angle);
+
+              // 현재 상태 복사
+              Matter.Body.setVelocity(newBody, body.velocity);
+              Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+              // 바디 교체
+              Matter.World.remove(engineRef.current!.world, body);
+              Matter.World.add(engineRef.current!.world, newBody);
+              bodiesRef.current[bodiesRef.current.length - 1] = newBody;
+
+              // 그래픽 크기 업데이트
+              setGraphics(prev => {
+                const next = [...prev];
+                const lastIndex = next.length - 1;
+                next[lastIndex] = {
+                  ...next[lastIndex],
+                  width: width * currentScale,
+                  height: height * currentScale
+                };
+                return next;
+              });
+
+              if (shrinkProgress < 1) {
+                requestAnimationFrame(shrinkAnimation);
+              } else {
+                isHandlingClick = false;
+              }
+            };
+            requestAnimationFrame(shrinkAnimation);
+          }
+        };
+
+        requestAnimationFrame(expandAnimation);
+      };
+    };
+
+    render.canvas.addEventListener('click', handleCanvasClick);
+
     // 모바일 여부 확인
     const isMobile = window.innerWidth < 768;
     
-    // 모바일에서는 문장 순서대로 역순 정렬
-    const words = isMobile 
-      ? ["DESIGNS", "WRAPPED", "IN", "CREATIVITY", "DELIVERED", "WITH", "CARE"].reverse().map(text => 
-          allWords.find(word => word.text === text)!
-        )
-      : allWords;
-    
-    setOrderedWords(words);
-
     // 순서에 맞는 크기와 폰트 매핑
-    const orderedSizes = words.map(word => 
+    const orderedSizes = orderedWords.map(word => 
       textSizes[allWords.findIndex(w => w.text === word.text)]
     );
     
-    bodiesRef.current = words.map((word, i) => {
+    bodiesRef.current = orderedWords.map((word, i) => {
       const size = orderedSizes[i];
       const isSecondLine = isMobile ? i >= 4 : i < secondLine.length;
       
-      // 모바일에서는 항상 중앙에서 떨어지도록 x 좌표 설정
       const xPosition = isMobile 
         ? window.innerWidth / 2 
         : word.x * window.innerWidth;
 
-      // 모바일에서는 순서대로 높이 설정
       const yPosition = isMobile
         ? -100 - (i * 200)
         : (isSecondLine ? -100 : -300);
@@ -516,6 +705,11 @@ const FallingText = () => {
             fillStyle: 'transparent',
             strokeStyle: '#000',
             lineWidth: 1
+          },
+          collisionFilter: {
+            group: 0,
+            category: 0x0001,
+            mask: 0xFFFFFFFF
           }
         }
       );
@@ -546,13 +740,29 @@ const FallingText = () => {
     const animate = () => {
       Matter.Engine.update(engine, 1000 / 60);
       
-      const newPositions = bodiesRef.current.map(body => ({
+      // undefined나 null이 아닌 body만 필터링
+      const validBodies = bodiesRef.current.filter(body => body && body.position);
+      
+      const newPositions = validBodies.slice(0, orderedWords.length).map(body => ({
         x: body.position.x,
         y: body.position.y,
         angle: body.angle
       }));
       
       setPositions(newPositions);
+      
+      // 그래픽 위치 업데이트
+      setGraphics(prev => prev.map((graphic, i) => {
+        const body = validBodies[orderedWords.length + i];
+        if (!body) return graphic;
+        return {
+          ...graphic,
+          x: body.position.x,
+          y: body.position.y,
+          angle: body.angle
+        };
+      }));
+
       frameId = requestAnimationFrame(animate);
     };
 
@@ -564,12 +774,15 @@ const FallingText = () => {
       Matter.Render.stop(render);
       Matter.World.clear(engine.world, false);
       Matter.Engine.clear(engine);
+      render.canvas.removeEventListener('click', handleCanvasClick);
       render.canvas.remove();
     };
   }, [isReady]);
 
   return (
-    <div className="fixed inset-0 bg-white">
+    <div 
+      className="fixed inset-0 bg-white"
+    >
       <div ref={measureRef} className="absolute top-0 left-0 opacity-0 pointer-events-none" />
       
       {/* 물리 엔진 캔버스 */}
@@ -578,7 +791,10 @@ const FallingText = () => {
       </div>
 
       {/* 텍스트 레이어 */}
-      <div className="fixed inset-0" style={{ zIndex: 2, mixBlendMode: 'multiply' }}>
+      <div 
+        className="fixed inset-0 pointer-events-none" 
+        style={{ zIndex: 2 }}
+      >
         {positions.map((pos, i) => {
           if (!orderedWords[i]) return null;
           const word = orderedWords[i];
@@ -586,22 +802,46 @@ const FallingText = () => {
           return (
             <div
               key={i}
-              className="absolute font-bold text-black cursor-pointer"
-              onClick={() => handleWordClick(originalIndex)}
+              className="absolute font-bold text-black cursor-pointer pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWordClick(originalIndex);
+              }}
               style={{
                 left: `${pos.x}px`,
                 top: `${pos.y}px`,
                 transform: `translate(-50%, -50%) rotate(${pos.angle}rad)`,
-                mixBlendMode: 'multiply',
                 fontSize: `calc(${BASE_FONT_SIZE} * ${fontSizes[originalIndex]})`,
                 fontFamily: fonts[originalIndex],
-                transition: 'font-size 0.3s'
+                transition: 'font-size 0.3s',
+                padding: '10px',
+                WebkitBackfaceVisibility: 'hidden',
+                backfaceVisibility: 'hidden'
               }}
             >
               {word.text}
             </div>
           );
         })}
+
+        {/* 그래픽 레이어 */}
+        {graphics.map((graphic, i) => (
+          <img
+            key={`graphic-${i}`}
+            src={graphic.src}
+            alt=""
+            className="absolute pointer-events-none"
+            style={{
+              left: `${graphic.x}px`,
+              top: `${graphic.y}px`,
+              width: `${graphic.width}px`,
+              height: `${graphic.height}px`,
+              transform: `translate(-50%, -50%) rotate(${graphic.angle}rad)`,
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
+            }}
+          />
+        ))}
       </div>
     </div>
   );

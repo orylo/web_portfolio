@@ -6,8 +6,8 @@ export default function Document() {
       <Head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Anton&family=Bebas+Neue&family=Big+Shoulders+Display:wght@700&family=Black+Ops+One&family=Bungee+Inline&family=Bungee+Shade&family=Caveat:wght@700&family=Chau+Philomene+One&family=Covered+By+Your+Grace&family=Dancing+Script:wght@700&family=Faster+One&family=Homemade+Apple&family=Indie+Flower&family=Megrim&family=Monoton&family=Oswald:wght@700&family=Permanent+Marker&family=Righteous&family=Rock+Salt&family=Rubik+Mono+One&family=Russo+One&family=Sarpanch:wght@800&family=Satisfy&family=Shadows+Into+Light&family=Stalinist+One&family=Teko:wght@700&family=Wallpoet&display=swap" 
+        <link
+          href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Big+Shoulders+Display:wght@700&family=Black+Ops+One&family=Bungee+Inline&family=Bungee+Shade&family=Caveat:wght@700&family=Chau+Philomene+One&family=Covered+By+Your+Grace&family=Dancing+Script:wght@700&family=Faster+One&family=Homemade+Apple&family=Indie+Flower&family=Megrim&family=Monoton&family=Oswald:wght@700&family=Permanent+Marker&family=Righteous&family=Rock+Salt&family=Rubik+Mono+One&family=Russo+One&family=Sarpanch:wght@900&family=Satisfy&family=Shadows+Into+Light&family=Stalinist+One&family=Teko:wght@700&family=Wallpoet&display=swap"
           rel="stylesheet"
         />
       </Head>
