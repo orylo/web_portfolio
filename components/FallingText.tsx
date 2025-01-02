@@ -96,7 +96,7 @@ const FallingText = () => {
     // 팽창 애니메이션
     const expandDuration = 100; // 100ms
     const shrinkDuration = 200; // 200ms
-    const maxScale = 1.05; // 5% 더 크게
+    const maxScale = 1.1; // 10% 더 크게
     const startTime = Date.now();
 
     // 상태 업데이트 (폰트 변경은 애니메이션 완료 후에 적용)
@@ -111,6 +111,25 @@ const FallingText = () => {
       return next;
     });
 
+    const createScaledBody = (position: Matter.Vector, scale: number, angle: number) => {
+      return Matter.Bodies.rectangle(
+        position.x,
+        position.y,
+        originalWidth * scale,
+        originalHeight * scale,
+        {
+          friction: 0.3,
+          restitution: 0.4,
+          render: {
+            fillStyle: 'transparent',
+            strokeStyle: '#000',
+            lineWidth: 1
+          },
+          angle: angle
+        }
+      );
+    };
+
     const expandAnimation = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / expandDuration, 1);
@@ -120,20 +139,7 @@ const FallingText = () => {
 
       if (engineRef.current && bodiesRef.current[index]) {
         const body = bodiesRef.current[index];
-        
-        // 와본 크기 기준으로 새로운 바디 생성 (회전 전)
-        const newBody = Matter.Bodies.rectangle(
-          body.position.x,
-          body.position.y,
-          originalWidth * scale,
-          originalHeight * scale,
-          {
-            friction: body.friction,
-            restitution: body.restitution,
-            render: body.render,
-            angle: currentAngle // 현재 각도 유지
-          }
-        );
+        const newBody = createScaledBody(body.position, scale, currentAngle);
 
         // 현재 상태 복사
         Matter.Body.setVelocity(newBody, body.velocity);
@@ -167,20 +173,7 @@ const FallingText = () => {
 
             if (engineRef.current && bodiesRef.current[index]) {
               const body = bodiesRef.current[index];
-
-              // 원본 크기 기준으로 새로운 바디 생성 (회전 전)
-              const newBody = Matter.Bodies.rectangle(
-                body.position.x,
-                body.position.y,
-                originalWidth * currentScale,
-                originalHeight * currentScale,
-                {
-                  friction: body.friction,
-                  restitution: body.restitution,
-                  render: body.render,
-                  angle: currentAngle // 현재 각도 유지
-                }
-              );
+              const newBody = createScaledBody(body.position, currentScale, currentAngle);
 
               // 현재 상태 복사
               Matter.Body.setVelocity(newBody, body.velocity);
@@ -279,12 +272,31 @@ const FallingText = () => {
 
       // 최종 크기로 바디 업데이트
       const body = bodiesRef.current[index];
-      const currentWidth = body.bounds.max.x - body.bounds.min.x;
-      const currentHeight = body.bounds.max.y - body.bounds.min.y;
-      const scaleX = newSize2D.width / currentWidth;
-      const scaleY = newSize2D.height / currentHeight;
+      const newBody = Matter.Bodies.rectangle(
+        body.position.x,
+        body.position.y,
+        newSize2D.width,
+        newSize2D.height,
+        {
+          friction: 0.3,
+          restitution: 0.4,
+          render: {
+            fillStyle: 'transparent',
+            strokeStyle: '#000',
+            lineWidth: 1
+          },
+          angle: body.angle
+        }
+      );
 
-      Matter.Body.scale(body, scaleX, scaleY);
+      // 현재 상태 복사
+      Matter.Body.setVelocity(newBody, body.velocity);
+      Matter.Body.setAngularVelocity(newBody, body.angularVelocity);
+
+      // 바디 교체
+      Matter.World.remove(engineRef.current.world, body);
+      Matter.World.add(engineRef.current.world, newBody);
+      bodiesRef.current[index] = newBody;
     };
   };
 
