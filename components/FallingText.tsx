@@ -82,7 +82,7 @@ const secondLine = [
 ];
 
 // SVG 그래픽 파일 목록
-const GRAPHICS = Array.from({ length: 20 }, (_, i) => `/assets/graphics/graphics${i + 1}.svg`);
+const GRAPHICS = Array.from({ length: 20 }, (_, i) => `/web_portfolio/assets/graphics/graphics${i + 1}.svg`);
 
 // 그래픽 기본 크기 설정
 const GRAPHIC_BASE_SIZE = 150;
