@@ -34,12 +34,12 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-24">
       <Navigation />
-      <main>
-        <div className="max-w-[1728px] mx-auto px-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 md:divide-x md:divide-black md:pt-32 md:pb-0">
-            <div className="md:pr-20 pt-32 md:pt-0 border-b border-black pb-12 md:border-b-0 md:pb-0">
+      <main className="relative">
+        <div className="max-w-[1728px] mx-auto px-[30px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 relative pt-[60px] pb-[50px]">
+            <div className="pt-0 border-b border-black pb-12 md:border-b-0 md:pb-0">
               <h1 className="text-4xl font-light mb-8">Contact</h1>
               <p className="text-lg text-gray-600 leading-relaxed mb-12">
                 프로젝트 협업이나 문의사항이 있으시다면 언제든 연락 주세요.
@@ -136,12 +136,13 @@ export default function Contact() {
                 )}
               </form>
             </div>
+            <div className="hidden md:block absolute top-[-84px] left-1/2 w-[1px] bg-black" style={{ height: 'calc(100% + 134px)' }} />
           </div>
         </div>
       </main>
 
-      <footer className="mt-[50px] border-t border-black">
-        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
+      <footer className="border-t border-black bg-white relative z-10">
+        <div className="max-w-[1728px] mx-auto px-[30px] py-20">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xs uppercase mb-4">Tel.</h3>

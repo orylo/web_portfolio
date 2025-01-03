@@ -130,7 +130,7 @@ export default function Works() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-24">
       <Navigation />
       {/* Fixed Tags Section */}
       <div className="fixed top-[96px] left-0 right-0 bg-white z-30">
@@ -161,7 +161,7 @@ export default function Works() {
         >
           <div 
             ref={tagsContentRef}
-            className="max-w-[1728px] mx-auto px-16"
+            className="max-w-[1728px] mx-auto px-[30px]"
           >
             <div className="py-6">
               <div className="flex flex-wrap gap-4 text-base uppercase">
@@ -193,16 +193,16 @@ export default function Works() {
 
       <main>
         <div 
-          className="relative z-20 transition-[padding] duration-500 ease-in-out"
+          className="relative z-20"
           style={{ 
             paddingTop: isDesktop
-              ? `${tagsHeight + 98}px` 
+              ? `${tagsHeight + 1}px` 
               : isTagsOpen 
-                ? `${tagsHeight + 171}px`
-                : '171px'
+                ? `${tagsHeight + 74}px`
+                : '74px'
           }}
         >
-          <div className="max-w-[1728px] mx-auto px-16">
+          <div className="max-w-[1728px] mx-auto px-[30px]">
             {/* Projects Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-[10px]">
               {filteredProjects.map((project) => (
@@ -257,7 +257,7 @@ export default function Works() {
 
       {/* Footer */}
       <footer className="mt-[50px] border-t border-black">
-        <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
+        <div className="max-w-[1728px] mx-auto px-[30px] py-20">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xs uppercase mb-4">Tel.</h3>

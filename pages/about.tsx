@@ -151,7 +151,7 @@ const About: NextPage = () => {
         <Navigation />
 
         <main className="flex-grow">
-          <div className="max-w-[1728px] mx-auto px-4 md:px-16 pt-32 pb-8">
+          <div className="max-w-[1728px] mx-auto px-[30px] pt-32 pb-8">
             <p className="text-[3rem] leading-normal mb-16 font-light">
               I am a passionate designer focused on creating meaningful digital experiences 
               that bridge the gap between human needs and technological possibilities. 
@@ -168,7 +168,7 @@ const About: NextPage = () => {
                   onClick={() => toggleSection(section.id)}
                   className="w-full hover:bg-gray-50 transition-colors"
                 >
-                  <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-4 flex justify-between items-center">
+                  <div className="max-w-[1728px] mx-auto px-[30px] py-4 flex justify-between items-center">
                     <span className="text-[2rem] font-medium">{section.title}</span>
                     <span className="transform transition-transform text-[2rem]">
                       {section.isOpen ? '−' : '+'}
@@ -180,7 +180,7 @@ const About: NextPage = () => {
                     section.isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
                   }`}
                 >
-                  <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-12">
+                  <div className="max-w-[1728px] mx-auto px-[30px] py-12">
                     <div className="grid md:grid-cols-2 md:divide-x md:divide-black">
                       <div className="pr-8 h-full">
                         <div className="bg-gray-300 h-full"></div>
@@ -208,7 +208,7 @@ const About: NextPage = () => {
         </main>
 
         <footer className="border-t border-black bg-white">
-          <div className="max-w-[1728px] mx-auto px-4 md:px-16 py-20">
+          <div className="max-w-[1728px] mx-auto px-[30px] py-20">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               <div>
                 <h3 className="text-xs uppercase mb-4">Tel.</h3>

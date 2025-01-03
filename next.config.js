@@ -8,4 +8,4 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '/web_portfolio' : '',
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

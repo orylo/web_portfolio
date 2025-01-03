@@ -39,8 +39,8 @@ export default function Navigation({ currentPath }: NavigationProps) {
       {/* Desktop & Mobile Navigation */}
       <nav className="fixed top-0 left-0 right-0 bg-white z-50">
         <div className="border-b border-black">
-          <div className="max-w-[1728px] mx-auto px-16">
-            <div className="h-24 flex items-center justify-between">
+          <div className="max-w-[1728px] mx-auto">
+            <div className="h-24 flex items-center justify-between px-[30px]">
               {/* Logo */}
               <Link href="/" className="relative h-12 w-48 pt-[2px] transition-all duration-300 ease-in-out">
                 <Image
@@ -104,7 +104,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
             href="/about"
             className={`h-12 flex items-center text-[2rem] uppercase tracking-wider ${
               isActive('/about') ? 'text-black' : 'text-gray-500 hover:text-black'
-            } transition-colors duration-200 font-light px-16 border-b border-black`}
+            } transition-colors duration-200 font-light px-[60px] border-b border-black`}
             onClick={() => setIsMenuOpen(false)}
           >
             About
@@ -113,7 +113,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
             href="/works"
             className={`h-12 flex items-center text-[2rem] uppercase tracking-wider ${
               isActive('/works') ? 'text-black' : 'text-gray-500 hover:text-black'
-            } transition-colors duration-200 font-light px-16 border-b border-black`}
+            } transition-colors duration-200 font-light px-[60px] border-b border-black`}
             onClick={() => setIsMenuOpen(false)}
           >
             Works
@@ -122,7 +122,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
             href="/contact"
             className={`h-12 flex items-center text-[2rem] uppercase tracking-wider ${
               isActive('/contact') ? 'text-black' : 'text-gray-500 hover:text-black'
-            } transition-colors duration-200 font-light px-16 border-b border-black`}
+            } transition-colors duration-200 font-light px-[60px] border-b border-black`}
             onClick={() => setIsMenuOpen(false)}
           >
             Contact
